@@ -1,93 +1,49 @@
-/* WRAPPER */
 .Day {
-    width: 100%;
-    display: flex;
-    justify-content: center;
+  width: 100%;
+  display: flex;
 }
 
-/* CARD */
 .day-card {
-    background: white;
-    border-radius: 16px;
-    padding: 15px;
-
-    width: 100%;
-    max-width: 160px; /* ✅ שומר על גודל אחיד */
-
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-    transition: 0.25s ease;
+  width: 100%;
+  height: 100%;
+  padding: 14px 12px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
-/* HOVER */
 .day-card:hover {
-    transform: translateY(-6px) scale(1.02);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow);
 }
 
-/* DATE */
 .day-card h4 {
-    font-size: 14px;
-    color: #444;
-    margin: 0;
+  font-size: 14px;
+  color: var(--text-h);
+  margin: 0;
 }
 
-/* TEMP */
 .day-card .temp {
-    font-weight: bold;
-    font-size: 16px;
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--text-h);
 }
 
-/* DESCRIPTION */
 .day-card .desc {
-    font-size: 13px;
-    color: #666;
-    text-align: center;
+  font-size: 13px;
+  color: var(--text);
 }
 
-/* OPTIONAL ICON (אם תוסיפי תמונה) */
-.day-card img {
-    width: 50px;
-}
-
-
-
-/* =========================
-   📱 TABLET (<= 900px)
-========================= */
-@media (max-width: 900px) {
-  .day-card {
-    max-width: 140px;
-    padding: 12px;
-  }
-
-  .day-card h4 {
-    font-size: 13px;
-  }
-
-  .day-card .temp {
-    font-size: 15px;
-  }
-
-  .day-card .desc {
-    font-size: 12px;
-  }
-
-  .day-card img {
-    width: 45px;
-  }
-}
-
-/* =========================
-   📱 MOBILE (<= 600px)
-========================= */
 @media (max-width: 600px) {
   .day-card {
-    max-width: 100%;
     padding: 10px;
     gap: 6px;
   }
@@ -102,30 +58,5 @@
 
   .day-card .desc {
     font-size: 11px;
-  }
-
-  .day-card img {
-    width: 40px;
-  }
-}
-
-/* =========================
-   📱 VERY SMALL (<= 400px)
-========================= */
-@media (max-width: 400px) {
-  .day-card {
-    padding: 8px;
-  }
-
-  .day-card h4 {
-    font-size: 11px;
-  }
-
-  .day-card .temp {
-    font-size: 13px;
-  }
-
-  .day-card .desc {
-    font-size: 10px;
   }
 }

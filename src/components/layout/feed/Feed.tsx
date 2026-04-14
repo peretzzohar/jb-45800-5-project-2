@@ -2,41 +2,20 @@ import { useEffect, useState } from 'react'
 import './Feed.css'
 import type { WeatherResponse } from '../../../models/Weather'
 import mainService from '../../../services/mainService'
-
-const cities = [
-    "Tel Aviv, Israel",
-    "Paris, France",
-    "London, United Kingdom",
-    "Berlin, Germany",
-    "Rome, Italy",
-    "Madrid, Spain",
-    "Lisbon, Portugal",
-    "Athens, Greece",
-    "Cairo, Egypt",
-    "Dubai, United Arab Emirates",
-    "New York, USA",
-    "Toronto, Canada",
-    "Mexico City, Mexico",
-    "Rio de Janeiro, Brazil",
-    "Buenos Aires, Argentina",
-    "Cape Town, South Africa",
-    "Nairobi, Kenya",
-    "Tokyo, Japan",
-    "Seoul, South Korea",
-    "Sydney, Australia"
-]
+import { CITIES, DEFAULT_CITY } from '../home/homeData'
 
 export default function Feed() {
+  const [weather, setWeather] = useState<WeatherResponse | null>(null)
+  const [selectedCity, setSelectedCity] = useState(
+    localStorage.getItem('selectedCity') || DEFAULT_CITY,
+  )
+  const [loading, setLoading] = useState(false)
 
-    const [weather, setWeather] = useState<WeatherResponse | null>(null)
-    const [selectedCity, setSelectedCity] = useState(localStorage.getItem('selectedCity') || 'Tel Aviv, Israel')
-    const [loading, setLoading] = useState(false)
-
-function handleChange(event: React.ChangeEvent<HTMLSelectElement>) {
-  const city = event.target.value
-  setSelectedCity(city)
-  localStorage.setItem('selectedCity', city)
-}
+  function handleChange(event: React.ChangeEvent<HTMLSelectElement>) {
+    const city = event.target.value
+    setSelectedCity(city)
+    localStorage.setItem('selectedCity', city)
+  }
 
     useEffect(() => {
         const fetchWeather = async () => {
@@ -59,10 +38,9 @@ function handleChange(event: React.ChangeEvent<HTMLSelectElement>) {
     return (
         <div className="Feed">
   <div className="select-row">
-  <h3>Location</h3>
-            {/* CITY SELECT */}
-            <select value={selectedCity} onChange={handleChange}>
-                {cities.map(city => (
+            <label htmlFor='feed-city-select'>Location</label>
+            <select id='feed-city-select' value={selectedCity} onChange={handleChange}>
+                {CITIES.map(city => (
                     <option key={city} value={city}>
                         {city}
                     </option>
@@ -70,8 +48,7 @@ function handleChange(event: React.ChangeEvent<HTMLSelectElement>) {
             </select>
         </div>
 
-            {/* LOADING */}
-            {loading && <p>Loading...</p>}
+            {loading && <p className='status-message'>Loading...</p>}
 
             {/* WEATHER */}
             {weather && !loading && (

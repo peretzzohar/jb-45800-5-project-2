@@ -84,8 +84,8 @@ export default function Home() {
         </div>
       </div>
 
-      {loading && <p>Loading...</p>}
-      {!loading && error && <p>{error}</p>}
+      {loading && <p className='status-message'>Loading...</p>}
+      {!loading && error && <p className='status-message error'>{error}</p>}
 
       {!loading && !error && weather && (
         <div className='down'>

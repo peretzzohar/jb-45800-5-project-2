@@ -7,18 +7,15 @@ export default function Header() {
   return (
     <div className='Header'>
       <div className='logo'>
-        {/* logo */}
-      <img src={NEWlogo} />
+        <img src={NEWlogo} alt='Weather logo' />
       </div>
 
-      <div>
-       
-        <NavLink to="/Home">Home</NavLink> | 
-        <NavLink to="/feed">Feed</NavLink>
+      <div className='nav'>
+        <NavLink to='/Home'>Home</NavLink>
+        <NavLink to='/feed'>Feed</NavLink>
       </div>
-      <div className='user-info'>
-        Welcome Message 
-      </div>
+
+      <div className='user-info'>Welcome Message</div>
     </div>
   )
 }
