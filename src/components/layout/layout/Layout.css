@@ -1,0 +1,119 @@
+html, body, #root {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+}
+
+/* Layout Grid */
+.Layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr 1fr auto;
+    height: 100%;
+    gap: 10px;
+    padding: 10px;
+    background-color: #f5f7fa;
+}
+
+/* Header */
+.Layout > header {
+    grid-column: 1 ;
+    grid-row: 1;
+    background: #4facfe;
+    color: white;
+    padding: 15px;
+    border-radius: 10px;
+}
+
+/* Main content */
+.Layout > main {
+    grid-column: 1;
+    grid-row: 2 / span 2;
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+    overflow-y: auto; /* ✔ במקום scroll */
+}
+
+/* Footer */
+.Layout > footer {
+    grid-column: 1 ;
+    grid-row: 4;
+    background: #4facfe;
+    color: white;
+    text-align: center;
+    padding: 10px;
+    border-radius: 10px;
+}
+
+/* =========================
+   📱 TABLET (<= 900px)
+========================= */
+@media (max-width: 900px) {
+  .Layout {
+    padding: 8px;
+    gap: 8px;
+  }
+
+  .Layout > header {
+    padding: 12px;
+  }
+
+  .Layout > main {
+    padding: 12px;
+  }
+
+  .Layout > footer {
+    padding: 8px;
+    font-size: 14px;
+  }
+}
+
+/* =========================
+   📱 MOBILE (<= 600px)
+========================= */
+@media (max-width: 600px) {
+  .Layout {
+    grid-template-rows: auto 1fr auto;
+  }
+
+  .Layout > header {
+    padding: 10px;
+    border-radius: 8px;
+  }
+
+  .Layout > main {
+    grid-row: 2;
+    padding: 10px;
+  }
+
+  .Layout > footer {
+    grid-row: 3;
+    padding: 10px;
+    font-size: 13px;
+  }
+}
+
+/* =========================
+   📱 VERY SMALL (<= 400px)
+========================= */
+@media (max-width: 400px) {
+  .Layout {
+    padding: 6px;
+    gap: 6px;
+  }
+
+  .Layout > header {
+    padding: 8px;
+  }
+
+  .Layout > main {
+    padding: 8px;
+  }
+
+  .Layout > footer {
+    font-size: 12px;
+    padding: 8px;
+  }
+}

@@ -1,0 +1,153 @@
+.Feed {
+  background: white;
+  padding: 25px;
+  border-radius: 16px;
+  margin: 0 auto; /* מרכז אופקית */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px; 
+  text-align: center;
+}
+
+.weather-card {
+  border-radius: 20px;
+  padding: 25px;
+  margin-top: 20px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  font-family: Arial, sans-serif;
+  transition: transform 0.3s ease;
+}
+
+
+
+.weather-card h1 {
+  font-size: 18px;
+  color: #555;
+  margin: 0;
+}
+
+.weather-card h2 {
+  font-size: 26px;
+  margin: 5px 0;
+  color: #222;
+}
+
+.weather-card p {
+  margin: 0;
+  font-size: 15px;
+  color: #333;
+}
+
+.weather-card img {
+  width: 100px;
+  height: 100px;
+  margin-top: 10px;
+}
+
+.weather-card b {
+  color: #000;
+}
+
+
+.select-row {
+    width: 100%;
+    max-width: 990px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 10px auto;
+    gap: 15px;
+}
+
+.select-row h3 {
+    margin: 0;
+    font-size: 16px;
+    color: #333;
+}
+
+.select-row select {
+    flex: 1;
+    max-width: 800px;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+    background: white;
+    font-size: 14px;
+    outline: none;
+} 
+
+
+/* =======================
+   📱 TABLET (<= 900px)
+======================= */
+@media (max-width: 900px) {
+  .Feed {
+    padding: 18px;
+  }
+
+  .weather-card h2 {
+    font-size: 22px;
+  }
+
+  .select-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .select-row select {
+    max-width: 100%;
+  }
+}
+
+/* =======================
+   📱 MOBILE (<= 600px)
+======================= */
+@media (max-width: 600px) {
+  .Feed {
+    padding: 12px;
+  }
+
+  .weather-card {
+    padding: 18px;
+  }
+
+  .weather-card h2 {
+    font-size: 20px;
+  }
+
+  .weather-card img {
+    width: 80px;
+    height: 80px;
+  }
+
+  .select-row h3 {
+    font-size: 14px;
+  }
+
+  .select-row select {
+    font-size: 13px;
+    padding: 8px;
+  }
+}
+
+/* =======================
+   📱 VERY SMALL (<= 400px)
+======================= */
+@media (max-width: 400px) {
+  .weather-card h2 {
+    font-size: 18px;
+  }
+
+  .weather-card p {
+    font-size: 13px;
+  }
+
+  .select-row {
+    gap: 10px;
+  }
+}
