@@ -13,6 +13,7 @@ export default function Header() {
       <div className='nav'>
         <NavLink to='/Home'>Home</NavLink>
         <NavLink to='/feed'>Feed</NavLink>
+        <NavLink to='/templates'>Templates</NavLink>
       </div>
 
       <div className='user-info'>Welcome Message</div>
