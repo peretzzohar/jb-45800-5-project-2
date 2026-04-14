@@ -137,10 +137,11 @@
     gap: 15px;
 }
 
-.select-row h3 {
+.select-row label {
     margin: 0;
     font-size: 16px;
     color: #333;
+    font-weight: 600;
 }
 
 /* הקופסה של הבחירה */
@@ -227,7 +228,7 @@
         height: 40px;
     }
 
-    .select-row h3 {
+    .select-row label {
         font-size: 14px;
     }
 

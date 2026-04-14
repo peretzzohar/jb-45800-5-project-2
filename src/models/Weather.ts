@@ -15,11 +15,11 @@ export interface Location {
 /* ---------------- CURRENT WEATHER ---------------- */
 
 export interface Current {
-    feelslike_c: ReactNode
-    humidity: ReactNode
-    wind_kph: ReactNode
-    uv: ReactNode
-    is_day: any
+    feelslike_c: number
+    humidity: number
+    wind_kph: number
+    uv: number
+    is_day: number
     temp_c: number
     condition: Condition
 }
