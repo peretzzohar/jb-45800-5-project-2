@@ -8,11 +8,11 @@ export type Coin = {
     current_price: number
 }
 
-export type CoinResponse = Coin[]
+export type coinResponse = Coin[]
 
 class MainService {
 
-    async getCoins(name?: string, symbol?: string): Promise<CoinResponse> {
+    async getCoins(name?: string, symbol?: string): Promise<coinResponse> {
         const { data } = await axios.get<Coin[]>(
             'https://api.coingecko.com/api/v3/coins/markets',
             {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import govService from '../../../services/govService'
+import govService from '../../../services/currencyService'
 
 interface GovCitySelectProps {
   value: string

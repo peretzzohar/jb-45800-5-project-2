@@ -1,5 +1,4 @@
 import { NavLink } from 'react-router-dom'
-// import { NavLink } from 'react-router-dom'
 import './Header.css'
 import NEWlogo from '../../../assets/logo2.png'
 
@@ -14,7 +13,7 @@ export default function Header() {
         <NavLink to='/Home'>Home</NavLink>
         <NavLink to='/feed'>Feed</NavLink>
         <NavLink to='/about'>About</NavLink>
-        <NavLink to='/templates'>Templates</NavLink>
+        {/* <NavLink to='/templates'>Templates</NavLink> */}
       </div>
 
       <div className='search-bar'>search bar</div>
