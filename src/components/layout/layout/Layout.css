@@ -1,4 +1,4 @@
-.Layout {
+/* .Layout {
   min-height: 100svh;
   width: min(100%, 1400px);
   margin: 0 auto;
@@ -6,8 +6,20 @@
   display: grid;
   grid-template-rows: auto 1fr auto;
   gap: clamp(10px, 1.5vw, 16px);
-}
+} */
 
+.Layout {
+  min-height: 100svh;
+  width: min(98%);
+  margin: 0 auto;
+  padding: clamp(8px, 1.8vw, 18px);
+
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: clamp(10px, 1.5vw, 16px);
+
+  box-sizing: border-box;
+}
 .Layout > header,
 .Layout > footer {
   background: transparent;

@@ -36,7 +36,7 @@ export default function Card({ coin }: Props) {
         </div>
       </article>
 
-      {/* POPUP */}
+      {/* MODAL */}
       {showDetails && (
         <div className='modal-overlay' onClick={() => setShowDetails(false)}>
           <div className='modal' onClick={(e) => e.stopPropagation()}>
@@ -44,7 +44,7 @@ export default function Card({ coin }: Props) {
               ✖
             </button>
 
-            <MoreInfo />
+            <MoreInfo coin={coin} />
           </div>
         </div>
       )}

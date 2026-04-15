@@ -1,14 +1,20 @@
 .card {
-width: 220px;   /* קבוע */
-height: 150px;
-    margin: 0 auto;
+  width: 100%;
+  max-width: 280px;
+  height: 150px;
+
+  margin: 0 auto;
   padding: 12px 12px 10px;
+
   border: 1px solid #e2e2e2;
-  border-radius: 8px;
+  border-radius: 10px;
   background: #fff;
+
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+
   display: grid;
-  gap: 14px;
+  gap: 15px;
+
   position: relative;
 }
 
@@ -17,7 +23,7 @@ height: 150px;
   grid-template-columns: 40px 1fr;
   grid-template-rows: auto auto;
   column-gap: 10px;
-  row-gap: 1px;
+  row-gap: 2px;
   align-items: center;
   min-height: 42px;
 }
@@ -97,15 +103,34 @@ height: 150px;
   filter: brightness(0.97);
 }
 .modal-overlay {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
- 
- width: 100%;
+  width: 100%;
   height: 100%;
+  background: rgba(0,0,0,0.6);
+
   display: flex;
   justify-content: center;
   align-items: center;
 
-  background: rgba(0, 0, 0, 0.6);
+  z-index: 999;
+}
+
+.modal {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  width: 360px;
+  position: relative;
+}
+
+.close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  border: none;
+  background: transparent;
+  font-size: 18px;
+  cursor: pointer;
 }
