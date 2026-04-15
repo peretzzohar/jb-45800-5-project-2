@@ -7,6 +7,19 @@
   gap: 16px;
 }
 
+.Body h2 {
+  margin: 0;
+  color: var(--text-h);
+}
+
+.cards-grid {
+  width: min(1200px, 100%);
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+  padding: 0 12px 12px;
+}
+
 .up,
 .down {
   width: 100%;

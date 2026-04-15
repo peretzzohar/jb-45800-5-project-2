@@ -1,113 +1,57 @@
 import { useEffect, useState } from 'react'
-import './Home.css'
+import type { CoinCardItem } from '../card/Card'
+import Card from '../card/Card'
 import mainService from '../../../services/mainService'
-import type { WeatherResponse } from '../../../models/Weather'
-import Day from '../day/Day'
-import { CITIES, DEFAULT_CITY, FORECAST_DAYS } from './homeData'
+import './Home.css'
 
 export default function Home() {
-  const [weather, setWeather] = useState<WeatherResponse | null>(null)
+  const [coins, setCoins] = useState<CoinCardItem[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
-  const [selectedCity, setSelectedCity] = useState(() => {
-    return localStorage.getItem('selectedCity') || DEFAULT_CITY
-  })
-  const [selectedDay, setSelectedDay] = useState(7)
-  const [loading, setLoading] = useState(false)
-
-  function handleCityChange(event: React.ChangeEvent<HTMLSelectElement>) {
-    const city = event.target.value
-    setSelectedCity(city)
-    localStorage.setItem('selectedCity', city)
-  }
-
-  function handleDaysChange(event: React.ChangeEvent<HTMLSelectElement>) {
-    setSelectedDay(Number(event.target.value))
-  }
 
   useEffect(() => {
-    let isMounted = true
-
-    const fetchWeather = async () => {
-      if (!selectedCity) return
-
+    async function fetchCoins() {
       try {
-        setLoading(true)
+        setIsLoading(true)
         setError('')
 
-        const data = await mainService.getWeather(selectedCity, selectedDay)
+        const data = await mainService.getCoins()
 
-        if (isMounted) {
-          setWeather(data)
-        }
-      } catch (err) {
-        console.error(err)
-        if (isMounted) {
-          setError('Unable to load weather data right now.')
-        }
+        const mapped = data.map((c) => ({
+        id: c.id,
+        name: c.name,
+        symbol: c.symbol,
+        logo: c.image
+        }))
+
+        const uniqueCoins = Array.from(
+          new Map(mapped.map((coin) => [coin.id, coin])).values()
+        )
+
+        setCoins(uniqueCoins.slice(0, 100))
+      } catch {
+        setError('Failed to load coins.')
       } finally {
-        if (isMounted) {
-          setLoading(false)
-        }
+        setIsLoading(false)
       }
     }
 
-    fetchWeather()
-
-    return () => {
-      isMounted = false
-    }
-  }, [selectedCity, selectedDay])
+    fetchCoins()
+  }, [])
 
   return (
     <div className='Body'>
-      <div className='up'>
-        <div className='select-row'>
-          <label htmlFor='city-select'>Location</label>
-          <select id='city-select' value={selectedCity} onChange={handleCityChange}>
-            {CITIES.map((city) => (
-              <option key={city} value={city}>
-                {city}
-              </option>
-            ))}
-          </select>
-        </div>
+      <h2>Top 100 Coins</h2>
 
-        <div className='select-row'>
-          <label htmlFor='days-select'>Days</label>
-          <select id='days-select' value={selectedDay} onChange={handleDaysChange}>
-            {FORECAST_DAYS.map((day) => (
-              <option key={day} value={day}>
-                {day}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
+      {isLoading && <p>Loading coins...</p>}
+      {error && <p>{error}</p>}
 
-      {loading && <p className='status-message'>Loading...</p>}
-      {!loading && error && <p className='status-message error'>{error}</p>}
-
-      {!loading && !error && weather && (
-        <div className='down'>
-          <div className='location-name'>
-            <h2>{weather.location.name}</h2>
-          </div>
-
-          <div className='current-card'>
-            <img
-              src={`https:${weather.current.condition.icon}`}
-              alt={weather.current.condition.text}
-            />
-            <h3>{weather.current.temp_c}°C</h3>
-            <p>{weather.current.condition.text}</p>
-          </div>
-
-          <div className='forecast-grid'>
-            {weather.forecast.forecastday.map((forecastDay) => (
-              <Day key={forecastDay.date} day={forecastDay} />
-            ))}
-          </div>
-        </div>
+      {!isLoading && !error && (
+        <section className='cards-grid'>
+          {coins.map((coin) => (
+            <Card key={coin.id} coin={coin} />
+          ))}
+        </section>
       )}
     </div>
   )

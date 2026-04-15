@@ -53,7 +53,7 @@
   background: white;
 }
 
-.Header .user-info {
+.Header .search-bar {
   display: flex;
   align-items: center;
   font-size: 14px;

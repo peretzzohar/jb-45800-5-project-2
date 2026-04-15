@@ -1,0 +1,99 @@
+.card {
+width: 220px;   /* קבוע */
+height: 150px;
+    margin: 0 auto;
+  padding: 12px 12px 10px;
+  border: 1px solid #e2e2e2;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  display: grid;
+  gap: 14px;
+  position: relative;
+}
+
+.coin-preview {
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  grid-template-rows: auto auto;
+  column-gap: 10px;
+  row-gap: 1px;
+  align-items: center;
+  min-height: 42px;
+}
+
+.coin-logo {
+  grid-row: 1 / 3;
+  width: 34px;
+  height: 34px;
+  border-radius: 50px;
+  object-fit: contain;
+}
+
+.coin-symbol {
+  margin: 0;
+  text-transform: uppercase;
+  font-size: 18px;
+  line-height: 1;
+  font-weight: 700;
+  color: #4a4a4a;
+}
+
+.coin-name {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: #8f8f8f;
+}
+
+.card-actions {
+  width: 100%;
+  display: block;
+}
+
+.card-actions button {
+  border: 0;
+  border-radius: 4px;
+  padding: 8px 10px;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  /* background: #efb01f; */
+  background: #3976de;
+  color: #fff;
+  font-size: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.card-actions button::before {
+  content: 'MORE INFO';
+  font-size: 12px;
+}
+
+.card-actions .secondary {
+  position: absolute;
+  top: 11px;
+  right: 12px;
+  width: 42px;
+  height: 24px;
+  background: #f6e1a9;
+  border: 1px solid #f0ca6f;
+  border-radius: 999px;
+  padding: 0;
+}
+
+.card-actions .secondary::before {
+  content: '';
+  display: block;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  margin: 2px 0 0 2px;
+}
+
+.card-actions button:hover {
+  filter: brightness(0.97);
+}

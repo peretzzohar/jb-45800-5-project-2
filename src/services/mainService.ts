@@ -1,21 +1,42 @@
 import axios from 'axios'
-import type { WeatherResponse } from '../models/Weather'
+
+export type Coin = {
+    id: string
+    name: string
+    symbol: string
+    image: string
+    current_price: number
+}
+
+export type CoinResponse = Coin[]
 
 class MainService {
 
-    async getWeather(city: string, day: number): Promise<WeatherResponse> {
-        const { data } = await axios.get(
-            'https://api.weatherapi.com/v1/forecast.json',
+    async getCoins(name?: string, symbol?: string): Promise<CoinResponse> {
+        const { data } = await axios.get<Coin[]>(
+            'https://api.coingecko.com/api/v3/coins/markets',
             {
                 params: {
-                    key: import.meta.env.VITE_API_KEY,
-                    q: city,
-                    days: day,
+                    vs_currency: 'usd',
                 }
             }
         )
 
-        return data
+        let filtered = data
+
+        if (name) {
+            filtered = filtered.filter(c =>
+                c.name.toLowerCase().includes(name.toLowerCase())
+            )
+        }
+
+        if (symbol) {
+            filtered = filtered.filter(c =>
+                c.symbol.toLowerCase().includes(symbol.toLowerCase())
+            )
+        }
+
+        return filtered
     }
 }
 
