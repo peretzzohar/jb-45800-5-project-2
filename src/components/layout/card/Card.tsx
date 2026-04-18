@@ -11,9 +11,11 @@ export type CoinCardItem = {
 
 type Props = {
   coin: CoinCardItem
+  isTracked: boolean
+  onToggleTrack: (coinId: string) => void
 }
 
-export default function Card({ coin }: Props) {
+export default function Card({ coin, isTracked, onToggleTrack }: Props) {
   const [showDetails, setShowDetails] = useState(false)
 
   return (
@@ -30,8 +32,15 @@ export default function Card({ coin }: Props) {
             More Info
           </button>
 
-          <button type='button' className='secondary'>
-            Track
+          <button
+            type='button'
+            className={`secondary ${isTracked ? 'active' : ''}`}
+            role='switch'
+            aria-checked={isTracked}
+            aria-label={`Track ${coin.name}`}
+            onClick={() => onToggleTrack(coin.id)}
+          >
+            <span className='visually-hidden'>{isTracked ? 'Tracking enabled' : 'Tracking disabled'}</span>
           </button>
         </div>
       </article>

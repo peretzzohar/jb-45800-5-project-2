@@ -25,7 +25,7 @@ export default function MoreInfo({ coin }: Props) {
         setIsLoading(true)
         setError('')
 
-        const res = await currencyService.getCoinsAll()
+        const res = await currencyService.getCoinsAll(coin.id)
 
         const findCoin = (list: Coin[]) =>
           list.find(c => c.id.toLowerCase() === coin.id.toLowerCase())
@@ -69,7 +69,7 @@ export default function MoreInfo({ coin }: Props) {
           <p className='symbol'>{coin.symbol.toUpperCase()}</p>
         </div>
       </header>
-
+<h5> Current price of the currency </h5>
       <dl className='more-info-grid'>
         {usd && (
           <div>
