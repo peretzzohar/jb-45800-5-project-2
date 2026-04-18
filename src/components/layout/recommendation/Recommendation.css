@@ -1,0 +1,121 @@
+.Recommendation {
+	width: min(900px, 100%);
+	margin: 0 auto;
+	padding: 16px;
+	border-radius: 14px;
+	border: 1px solid #dbe6f6;
+	background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+}
+
+.recommendation-header h2 {
+	margin: 0;
+	color: #1d365d;
+}
+
+.recommendation-header p {
+	margin: 6px 0 14px;
+	color: #56739e;
+	font-size: 14px;
+}
+
+.api-key-panel {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	margin-bottom: 12px;
+}
+
+.api-key-panel label {
+	font-size: 13px;
+	font-weight: 600;
+	color: #274a7a;
+}
+
+.api-key-panel input {
+	height: 38px;
+	padding: 0 10px;
+	border-radius: 8px;
+	border: 1px solid #cfe0fa;
+	outline: none;
+	background: #fff;
+	color: #233f69;
+}
+
+.api-key-panel input:focus {
+	border-color: #3a78df;
+	box-shadow: 0 0 0 3px rgba(58, 120, 223, 0.15);
+}
+
+.radio-list {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	margin-bottom: 12px;
+}
+
+.radio-item {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 8px 10px;
+	border-radius: 999px;
+	border: 1px solid #cfe0fa;
+	background: #eef5ff;
+	color: #274a7a;
+}
+
+.recommend-btn {
+	border: 0;
+	border-radius: 10px;
+	padding: 10px 14px;
+	font-weight: 600;
+	background: #3a78df;
+	color: #fff;
+	cursor: pointer;
+}
+
+.recommend-btn:disabled {
+	opacity: 0.55;
+	cursor: not-allowed;
+}
+
+.status-message {
+	margin: 10px 0;
+	color: #4b6287;
+}
+
+.status-message.error {
+	color: #d13f3f;
+}
+
+.recommendation-card {
+	margin-top: 14px;
+	border: 1px solid #d5e4fb;
+	border-radius: 12px;
+	padding: 14px;
+	background: #ffffff;
+}
+
+.recommendation-card h3 {
+	margin: 0 0 6px;
+	color: #233f69;
+}
+
+.decision {
+	margin: 0 0 8px;
+	font-weight: 700;
+}
+
+.decision.buy {
+	color: #0c8b58;
+}
+
+.decision.avoid {
+	color: #c0392b;
+}
+
+.reason {
+	margin: 0;
+	color: #3a5278;
+	line-height: 1.5;
+}

@@ -3,287 +3,319 @@ import axios from 'axios'
 import {
   createChart,
   ColorType,
-	LineSeries,
+  LineSeries,
   type IChartApi,
-	type ISeriesApi,
-  type Time,
+  type ISeriesApi,
+  type LineData,
   type UTCTimestamp,
 } from 'lightweight-charts'
 import './Feed.css'
 
-type BinanceKline = [
-  number,
-  string,
-  string,
-  string,
-  string,
-  string,
-  number,
-  string,
-  number,
-  string,
-  string,
-  string,
-]
-
-const BINANCE_KLINES_URL = 'https://api.binance.com/api/v3/klines'
 const TRACKED_COIN_SYMBOLS_KEY = 'trackedCoinSymbols'
-const INTERVAL = '5m'
-const REFRESH_MS = 15000
-const LIMIT = 250
-const SERIES_COLORS: Record<string, string> = {
-  BTCUSDT: '#f59e0b',
-  ETHUSDT: '#60a5fa',
-  BNBUSDT: '#facc15',
-  XRPUSDT: '#a78bfa',
-  DOGEUSDT: '#34d399',
-  SOLUSDT: '#f87171',
-}
+const REFRESH_MS = 30_000
+const HISTORY_DAYS = 30
+const HOURS_LIMIT = HISTORY_DAYS * 24
+const MAX_POINTS = HOURS_LIMIT
+
+const SERIES_COLORS = ['#f59e0b', '#60a5fa', '#facc15', '#a78bfa', '#34d399', '#f87171', '#22c55e']
+const LIVE_URL = import.meta.env.VITE_LIVE_SERVER_URL as string | undefined
 
 type CoinRow = {
-	symbol: string
-	close: number | null
-	changePct: number | null
+  symbol: string
+  price: number | null
+  changePct: number | null
+}
+
+type HistoryPoint = {
+  time: number | string
+  close: number
+}
+
+type CryptoCompareHistoryResponse = {
+  Response: string
+  Data?: {
+    Data: HistoryPoint[]
+  }
+}
+
+function normalizeTrackedSymbol(symbol: string): string {
+  return symbol.toUpperCase().replace(/USDT$/, '')
+}
+
+const normalizeTime = (t: number | string) => {
+  if (typeof t === 'string') return new Date(t).getTime()
+
+  if (t > 1e12) return t
+
+  return t * 1000
+}
+
+function buildHistoryUrl(symbol: string): string {
+  const fsym = normalizeTrackedSymbol(symbol)
+  const defaultHistoryUrl = `https://min-api.cryptocompare.com/data/v2/histohour?fsym=${encodeURIComponent(fsym)}&tsym=USD&limit=${HOURS_LIMIT}&aggregate=1`
+
+  if (!LIVE_URL || LIVE_URL.trim() === '') {
+    return defaultHistoryUrl
+  }
+
+  if (LIVE_URL.includes('<symbols>')) {
+    return LIVE_URL
+      .replace('<symbols>', encodeURIComponent(fsym))
+      .replace('/histominute', '/histohour')
+      .replace('limit=120', `limit=${HOURS_LIMIT}`)
+      .replace('aggregate=5', 'aggregate=1')
+  }
+
+  if (LIVE_URL.includes('<symbol>')) {
+    return LIVE_URL
+      .replace('<symbol>', encodeURIComponent(fsym))
+      .replace('/histominute', '/histohour')
+      .replace('limit=120', `limit=${HOURS_LIMIT}`)
+      .replace('aggregate=5', 'aggregate=1')
+  }
+
+  if (LIVE_URL.includes('/data/pricemulti')) {
+    return defaultHistoryUrl
+  }
+
+  try {
+    const parsed = new URL(LIVE_URL)
+    return `${parsed.origin}/data/v2/histohour?fsym=${encodeURIComponent(fsym)}&tsym=USD&limit=${HOURS_LIMIT}&aggregate=1`
+  } catch {
+    return defaultHistoryUrl
+  }
 }
 
 function readTrackedSymbols(): string[] {
-	try {
-		const raw = localStorage.getItem(TRACKED_COIN_SYMBOLS_KEY)
-		if (!raw) return []
+  try {
+    const raw = localStorage.getItem(TRACKED_COIN_SYMBOLS_KEY)
+    if (!raw) return []
 
-		const parsed = JSON.parse(raw)
-		if (!Array.isArray(parsed)) return []
+    const parsed = JSON.parse(raw)
+    if (!Array.isArray(parsed)) return []
 
-		return parsed
-			.filter((x): x is string => typeof x === 'string' && x.trim() !== '')
-			.map((x) => x.toUpperCase())
-	} catch {
-		return []
-	}
-}
-
-function colorForSymbol(symbol: string, index: number): string {
-	if (SERIES_COLORS[symbol]) return SERIES_COLORS[symbol]
-
-	const fallback = ['#22c55e', '#eab308', '#3b82f6', '#f97316', '#a855f7', '#06b6d4']
-	return fallback[index % fallback.length]
+    return parsed
+      .filter((x): x is string => typeof x === 'string')
+      .map((x) => x.toUpperCase())
+      .slice(0, 5)
+  } catch {
+    return []
+  }
 }
 
 export default function Feed() {
-	const chartContainerRef = useRef<HTMLDivElement | null>(null)
-	const chartRef = useRef<IChartApi | null>(null)
-	const seriesRef = useRef<Record<string, ISeriesApi<'Line'>>>({})
+  const chartContainerRef = useRef<HTMLDivElement | null>(null)
+  const chartRef = useRef<IChartApi | null>(null)
+  const seriesRef = useRef<Record<string, ISeriesApi<'Line'>>>({})
+  const historyRef = useRef<Record<string, LineData[]>>({})
 
-	const [watchedSymbols, setWatchedSymbols] = useState<string[]>(() => readTrackedSymbols())
-	const [loading, setLoading] = useState(true)
-	const [error, setError] = useState('')
-	const [rows, setRows] = useState<CoinRow[]>([])
-	const [lastUpdated, setLastUpdated] = useState<string>('')
+  const [watchedSymbols, setWatchedSymbols] = useState<string[]>(() =>
+    readTrackedSymbols()
+  )
 
-	useEffect(() => {
-		const syncTracked = () => {
-			setWatchedSymbols(readTrackedSymbols())
-		}
+  const [rows, setRows] = useState<CoinRow[]>([])
+  const [error, setError] = useState('')
+  const [lastUpdated, setLastUpdated] = useState('')
 
-		syncTracked()
-		window.addEventListener('tracked-symbols-updated', syncTracked)
-		window.addEventListener('storage', syncTracked)
+  // sync storage
+  useEffect(() => {
+    const sync = () => setWatchedSymbols(readTrackedSymbols())
 
-		return () => {
-			window.removeEventListener('tracked-symbols-updated', syncTracked)
-			window.removeEventListener('storage', syncTracked)
-		}
-	}, [])
+    window.addEventListener('tracked-symbols-updated', sync)
+    window.addEventListener('storage', sync)
 
-	useEffect(() => {
-		if (!chartContainerRef.current) return
+    return () => {
+      window.removeEventListener('tracked-symbols-updated', sync)
+      window.removeEventListener('storage', sync)
+    }
+  }, [])
 
-		const chart = createChart(chartContainerRef.current, {
-			height: 520,
-			layout: {
-				textColor: '#d8e1ef',
-				background: { type: ColorType.Solid, color: '#0e1726' },
-			},
-			grid: {
-				vertLines: { color: 'rgba(88, 104, 130, 0.25)' },
-				horzLines: { color: 'rgba(88, 104, 130, 0.25)' },
-			},
-			rightPriceScale: {
-				borderColor: 'rgba(141, 160, 189, 0.45)',
-			},
-			timeScale: {
-				borderColor: 'rgba(141, 160, 189, 0.45)',
-				timeVisible: true,
-				secondsVisible: false,
-				tickMarkFormatter: (time: Time) => {
-					if (typeof time === 'number') {
-						const d = new Date(time * 1000)
-						return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-					}
+  // chart init
+  useEffect(() => {
+    if (!chartContainerRef.current) return
 
-					return ''
-				},
-			},
-			crosshair: {
-				vertLine: {
-					color: 'rgba(245, 158, 11, 0.35)',
-					width: 1,
-				},
-				horzLine: {
-					color: 'rgba(245, 158, 11, 0.35)',
-					width: 1,
-				},
-			},
-		})
+    const chart = createChart(chartContainerRef.current, {
+      height: 500,
+      layout: {
+        textColor: '#d8e1ef',
+        background: { type: ColorType.Solid, color: '#0e1726' },
+      },
+      grid: {
+        vertLines: { color: 'rgba(88, 104, 130, 0.25)' },
+        horzLines: { color: 'rgba(88, 104, 130, 0.25)' },
+      },
+      rightPriceScale: {
+        borderColor: 'rgba(141, 160, 189, 0.45)',
+      },
+      timeScale: {
+        borderColor: 'rgba(141, 160, 189, 0.45)',
+        timeVisible: true,
+        secondsVisible: false,
+      },
+    })
 
-		const seriesMap: Record<string, ISeriesApi<'Line'>> = {}
+    chartRef.current = chart
 
-		for (const [index, symbol] of watchedSymbols.entries()) {
-			seriesMap[symbol] = chart.addSeries(LineSeries, {
-				color: colorForSymbol(symbol, index),
-				lineWidth: 2,
-				priceLineVisible: false,
-				lastValueVisible: true,
-				title: symbol.replace('USDT', ''),
-			})
-		}
+    return () => {
+      chart.remove()
+      chartRef.current = null
+      seriesRef.current = {}
+      historyRef.current = {}
+    }
+  }, [])
 
-		chartRef.current = chart
-		seriesRef.current = seriesMap
+  useEffect(() => {
+    const chart = chartRef.current
+    if (!chart) return
 
-		const resizeObserver = new ResizeObserver((entries) => {
-			for (const entry of entries) {
-				const { width } = entry.contentRect
-				chart.applyOptions({ width })
-			}
-		})
+    Object.values(seriesRef.current).forEach((series) => {
+      chart.removeSeries(series)
+    })
 
-		resizeObserver.observe(chartContainerRef.current)
+    seriesRef.current = {}
+    historyRef.current = {}
 
-		return () => {
-			resizeObserver.disconnect()
-			chart.remove()
-			chartRef.current = null
-			seriesRef.current = {}
-		}
-	}, [watchedSymbols])
+    watchedSymbols.forEach((symbol, index) => {
+      const series = chart.addSeries(LineSeries, {
+        color: SERIES_COLORS[index % SERIES_COLORS.length],
+        lineWidth: 2,
+        title: symbol.replace('USDT', ''),
+        priceLineVisible: false,
+        lastValueVisible: true,
+      })
 
-	useEffect(() => {
-		let isMounted = true
+      seriesRef.current[symbol] = series
+      historyRef.current[symbol] = []
+    })
+  }, [watchedSymbols])
 
-		const fetchLines = async () => {
-			if (watchedSymbols.length === 0) {
-				setRows([])
-				setLoading(false)
-				setError('Track coins in Home to watch them here.')
-				return
-			}
+  // fetch historical lines for each tracked coin
+  useEffect(() => {
+    if (watchedSymbols.length === 0) {
+      return
+    }
 
-			try {
-				if (isMounted) {
-					setLoading(true)
-					setError('')
-				}
+    let isMounted = true
 
-				const responses = await Promise.all(
-					watchedSymbols.map((symbol) =>
-						axios.get<BinanceKline[]>(BINANCE_KLINES_URL, {
-							params: {
-								symbol,
-								interval: INTERVAL,
-								limit: LIMIT,
-							},
-						})
-					)
-				)
+    const fetchData = async () => {
+      try {
+        const responses = await Promise.all(
+          watchedSymbols.map(async (symbol) => {
+            const url = buildHistoryUrl(symbol)
+            const { data } = await axios.get<CryptoCompareHistoryResponse>(url)
+            return { symbol, data }
+          })
+        )
 
-				if (!isMounted) return
+        if (!isMounted) return
 
-				const now = Date.now()
-				const nextRows: CoinRow[] = []
+        const formatted: CoinRow[] = responses.map(({ symbol, data }) => {
+          if (data.Response && data.Response !== 'Success') {
+            seriesRef.current[symbol]?.setData([])
+            return {
+              symbol,
+              price: null,
+              changePct: null,
+            }
+          }
 
-				responses.forEach((response, idx) => {
-					const symbol = watchedSymbols[idx]
-					const closed = response.data.filter((kline) => kline[6] <= now)
+          const points = data.Data?.Data
 
-					const lineData = closed.map((kline) => ({
-						time: Math.floor(kline[0] / 1000) as UTCTimestamp,
-						value: Number(kline[4]),
-					}))
+          const cleanedData = (points ?? [])
+            .map((item) => ({
+              ...item,
+              time: normalizeTime(item.time),
+            }))
+            .filter((item) => item.time <= Date.now())
+            .filter((item) => Number.isFinite(item.close))
 
-					seriesRef.current[symbol]?.setData(lineData)
+          const lineData = cleanedData
+            .map((p) => ({
+              time: (p.time / 1000) as UTCTimestamp,
+              value: p.close,
+            }))
+            .slice(-MAX_POINTS)
 
-					const last = lineData[lineData.length - 1]?.value ?? null
-					const prev = lineData[lineData.length - 2]?.value ?? null
+          const safeLineData = lineData.filter(
+            (p) => p.time * 1000 <= Date.now()
+          )
 
-					let changePct: number | null = null
-					if (last !== null && prev !== null && prev !== 0) {
-						changePct = ((last - prev) / prev) * 100
-					}
+          seriesRef.current[symbol]?.setData(safeLineData)
 
-					nextRows.push({ symbol, close: last, changePct })
-				})
+          const last = safeLineData[safeLineData.length - 1]?.value ?? null
+          const prev = safeLineData[safeLineData.length - 2]?.value ?? null
 
-				if (nextRows.every((row) => row.close === null)) {
-					setError('No closed 5-minute candle data available yet.')
-					return
-				}
+          let changePct: number | null = null
+          if (last !== null && prev !== null && prev !== 0) {
+            changePct = ((last - prev) / prev) * 100
+          }
 
-				setRows(nextRows)
-				chartRef.current?.timeScale().fitContent()
-				setLastUpdated(
-					new Date().toLocaleTimeString([], {
-						hour: '2-digit',
-						minute: '2-digit',
-						second: '2-digit',
-					})
-				)
-			} catch {
-				if (!isMounted) return
-				setError('Failed to load Binance market line data.')
-			} finally {
-				if (isMounted) {
-					setLoading(false)
-				}
-			}
-		}
+          return {
+            symbol,
+            price: last,
+            changePct,
+          }
+        })
 
-		fetchLines()
-		const intervalId = window.setInterval(fetchLines, REFRESH_MS)
+        setRows(formatted)
+        setError('')
 
-		return () => {
-			isMounted = false
-			window.clearInterval(intervalId)
-		}
-	}, [watchedSymbols])
+        chartRef.current?.timeScale().fitContent()
 
-	return (
-		<section className='Feed'>
-			<header className='feed-header'>
-				<h2>Multi-Coin 5-Minute Lines</h2>
-				<p>
-					Source: Binance klines <span className='dot'>•</span> Interval: 5m (300s) <span className='dot'>•</span> Coins tracked in Home <span className='dot'>•</span> Last refresh: {lastUpdated || '--:--:--'}
-				</p>
-			</header>
+        setLastUpdated(
+          new Date().toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+          })
+        )
+      } catch {
+        setError('Failed to fetch history data from VITE_LIVE_SERVER_URL')
+      }
+    }
 
-			{loading && <p className='status-message'>Loading latest 5-minute lines...</p>}
-			{error && <p className='status-message error'>{error}</p>}
+    fetchData()
 
-			<section className='ohlc-panel'>
-				{rows.map((row) => (
-					<div key={row.symbol}>
-						<span>{row.symbol.replace('USDT', '')}</span>
-						<strong>{row.close === null ? '--' : row.close.toLocaleString()}</strong>
-						<span className={row.changePct !== null && row.changePct < 0 ? 'delta neg' : 'delta pos'}>
-							{row.changePct === null ? '--' : `${row.changePct >= 0 ? '+' : ''}${row.changePct.toFixed(2)}%`}
-						</span>
-					</div>
-				))}
-			</section>
+    const id = setInterval(fetchData, REFRESH_MS)
 
-			<div className='chart-shell'>
-				<div ref={chartContainerRef} className='candles-container' />
-			</div>
-		</section>
-	)
+    return () => {
+      isMounted = false
+      clearInterval(id)
+    }
+  }, [watchedSymbols])
+
+  const displayRows = watchedSymbols.length === 0 ? [] : rows
+
+  return (
+    <section className='Feed'>
+      <header className='feed-header'>
+        <h2>Live Crypto Feed (Tracked Coins)</h2>
+        <p>
+          Source: VITE_LIVE_SERVER_URL <span className='dot'>•</span> 30-day history window <span className='dot'>•</span> Last update: {lastUpdated || '--:--:--'}
+        </p>
+      </header>
+
+      {watchedSymbols.length === 0 && <p className='status-message'>Track coins in Home to watch them here.</p>}
+
+      {error && <p className='status-message error'>{error}</p>}
+
+      <section className='ohlc-panel'>
+        {displayRows.map((r) => (
+          <div key={r.symbol}>
+            <span>{r.symbol}</span>
+            <strong>
+              {r.price != null ? r.price.toFixed(2) : 'N/A'}
+            </strong>
+            <span className={r.changePct !== null && r.changePct < 0 ? 'delta neg' : 'delta pos'}>
+              {r.changePct === null ? '--' : `${r.changePct >= 0 ? '+' : ''}${r.changePct.toFixed(2)}%`}
+            </span>
+          </div>
+        ))}
+      </section>
+
+      <div className='chart-shell'>
+        <div ref={chartContainerRef} className='candles-container' />
+      </div>
+    </section>
+  )
 }

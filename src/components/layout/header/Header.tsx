@@ -16,7 +16,8 @@ export default function Header({ searchTerm, onSearchChange }: HeaderProps) {
 
       <div className='nav'>
         <NavLink to='/Home'>Home</NavLink>
-        <NavLink to='/feed'>Feed</NavLink>
+        <NavLink to='/feed'>Info</NavLink>
+        <NavLink to='/recommendation'>Recommendation</NavLink>
         <NavLink to='/about'>About</NavLink>
         {/* <NavLink to='/templates'>Templates</NavLink> */}
       </div>

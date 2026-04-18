@@ -75,7 +75,7 @@ class CurrencyService {
     }
   }
 
-  private async getCoinByIdAndCurrency(coinId: string, currency: 'usd' | 'eur' | 'ils'): Promise<Coin> {
+  private async getCoinById(coinId: string): Promise<CoinDetailsResponse> {
     const url = this.getCoinDetailsUrl(coinId)
 
     const { data } = await axios.get<CoinDetailsResponse>(url, {
@@ -89,21 +89,18 @@ class CurrencyService {
       },
     })
 
-    return this.mapCoinDetailsToCoin(data, currency)
+    return data
   }
 
   async getCoinsAll(coinId?: string): Promise<MultiCurrencyResponse> {
     const normalizedBase = this.getNormalizedBaseUrl()
     const shouldUseCoinDetails = Boolean(coinId) && this.isCoinsRootUrl(normalizedBase)
 
-    if (shouldUseCoinDetails) {
-      const requestedCoinId = coinId as string
-
-      const [usdCoin, eurCoin, ilsCoin] = await Promise.all([
-        this.getCoinByIdAndCurrency(requestedCoinId, 'usd'),
-        this.getCoinByIdAndCurrency(requestedCoinId, 'eur'),
-        this.getCoinByIdAndCurrency(requestedCoinId, 'ils'),
-      ])
+    if (shouldUseCoinDetails && coinId) {
+      const coinDetails = await this.getCoinById(coinId)
+      const usdCoin = this.mapCoinDetailsToCoin(coinDetails, 'usd')
+      const eurCoin = this.mapCoinDetailsToCoin(coinDetails, 'eur')
+      const ilsCoin = this.mapCoinDetailsToCoin(coinDetails, 'ils')
 
       return {
         usd: [usdCoin],
