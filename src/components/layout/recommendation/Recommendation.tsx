@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import AiService, { type AiMetrics, type AiResult } from '../../../services/aiService'
+import AiService, { type AiMetrics, type AiResult } from '../../../services/aiService.ts'
 import './Recommendation.css'
 
 const TRACKED_COIN_IDS_KEY = 'trackedCoinIds'
