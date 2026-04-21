@@ -1,32 +1,37 @@
+/* ===== Overlay ===== */
 .track-limit-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(5, 9, 17, 0.72);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
 }
 
+/* ===== Modal ===== */
 .track-limit-modal {
   width: min(92vw, 460px);
-  background: #ffffff;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 20px;
-  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.26);
+  box-shadow: var(--shadow);
 }
 
 .track-limit-modal h3 {
   margin: 0 0 10px;
-  color: #2f3c4f;
+  color: var(--text-strong);
 }
 
 .track-limit-modal p {
   margin: 0 0 14px;
   font-size: 14px;
-  color: #5b6571;
+  color: var(--text-muted);
 }
 
+/* ===== List ===== */
 .track-limit-list {
   list-style: none;
   margin: 0 0 16px;
@@ -44,9 +49,10 @@
   align-items: center;
   gap: 8px;
   font-size: 14px;
-  color: #2f3c4f;
+  color: var(--text);
 }
 
+/* ===== Actions ===== */
 .track-limit-actions {
   display: flex;
   justify-content: flex-end;
@@ -54,20 +60,37 @@
 }
 
 .track-limit-actions button {
-  border: 0;
-  border-radius: 8px;
-  padding: 8px 14px;
+  border: 1px solid rgba(59, 130, 246, 0.5);
+  border-radius: 10px;
+  padding: 9px 14px;
   font-weight: 600;
   cursor: pointer;
-  background: #3976de;
-  color: #fff;
+  background: rgba(59, 130, 246, 0.16);
+  color: #dbeafe;
 }
 
 .track-limit-actions button.secondary {
-  background: #e86055;
+  background: rgba(234, 57, 67, 0.14);
+  border-color: rgba(234, 57, 67, 0.48);
+  color: #fecdd3;
 }
 
 .track-limit-actions button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 520px) {
+  .track-limit-modal {
+    padding: 14px;
+  }
+
+  .track-limit-actions {
+    flex-direction: column;
+  }
+
+  .track-limit-actions button {
+    width: 100%;
+  }
 }

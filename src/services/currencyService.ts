@@ -32,6 +32,19 @@ type CoinDetailsResponse = {
   }
 }
 
+type GovCityRecord = {
+  city_name?: string
+  city?: string
+  name?: string
+  '\u05e9\u05dd_\u05d9\u05e9\u05d5\u05d1'?: string
+}
+
+type GovCityApiResponse = {
+  result?: {
+    records?: GovCityRecord[]
+  }
+}
+
 const BASE_URL = import.meta.env.VITE_SERVER_URL_CURRENCY
 
 class CurrencyService {
@@ -128,6 +141,35 @@ class CurrencyService {
       eur: eur.data,
       ils: ils.data
     }
+  }
+
+  async getCities(limit = 20): Promise<string[]> {
+    const safeLimit = Number.isFinite(limit) ? Math.max(1, Math.min(100, Math.floor(limit))) : 20
+
+    try {
+      const { data } = await axios.get<GovCityApiResponse>(
+        'https://data.gov.il/api/3/action/datastore_search',
+        {
+          params: {
+            resource_id: '5c78e9fa-c2e2-4771-93ff-7f400a12f7ba',
+            limit: safeLimit,
+          },
+          timeout: 10_000,
+        }
+      )
+
+      const names = (data.result?.records ?? [])
+        .map((record) => record.city_name ?? record.city ?? record.name ?? record['\u05e9\u05dd_\u05d9\u05e9\u05d5\u05d1'])
+        .filter((name): name is string => typeof name === 'string' && name.trim().length > 0)
+        .map((name) => name.trim())
+
+      const uniqueNames = Array.from(new Set(names))
+      if (uniqueNames.length > 0) return uniqueNames.slice(0, safeLimit)
+    } catch {
+      // Fallback list keeps the template usable when API is unavailable.
+    }
+
+    return ['Jerusalem', 'Tel Aviv', 'Haifa', 'Rishon LeZion', 'Petah Tikva'].slice(0, safeLimit)
   }
 }
 

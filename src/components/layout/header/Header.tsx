@@ -10,27 +10,32 @@ type HeaderProps = {
 export default function Header({ searchTerm, onSearchChange }: HeaderProps) {
   return (
     <div className='Header'>
-      <div className='logo'>
-        <img src={NEWlogo} alt='Weather logo' />
+      <div className='brand-block'>
+        <div className='logo'>
+          <img src={NEWlogo} alt='Crypto dashboard logo' />
+        </div>
       </div>
 
-      <div className='nav'>
+      <nav className='nav' aria-label='Main navigation'>
         <NavLink to='/Home'>Home</NavLink>
-        <NavLink to='/feed'>Info</NavLink>
-        <NavLink to='/recommendation'>Recommendation</NavLink>
+        <NavLink to='/feed'>Live Data</NavLink>
+        <NavLink to='/recommendation'> A.I Recommendation</NavLink>
         <NavLink to='/about'>About</NavLink>
-        {/* <NavLink to='/templates'>Templates</NavLink> */}
-      </div>
+      </nav>
 
-      <div className='search-bar'>
-        <input
-          type='text'
-          className='search-input'
-          placeholder='Search bar ...'
-          value={searchTerm}
-          onChange={(event) => onSearchChange(event.target.value)}
-          aria-label='Search currencies by name or symbol'
-        />
+      <div className='header-tools'>
+
+        <div className='search-bar'>
+          <span className='search-icon' aria-hidden='true' />
+          <input
+            type='text'
+            className='search-input'
+            placeholder='Search coins by name or symbol...'
+            value={searchTerm}
+            onChange={(event) => onSearchChange(event.target.value)}
+            aria-label='Search currencies by name or symbol'
+          />
+        </div>
       </div>
     </div>
   )

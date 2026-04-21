@@ -1,58 +1,79 @@
-/* .Layout {
-  min-height: 100svh;
-  width: min(100%, 1400px);
-  margin: 0 auto;
-  padding: clamp(8px, 1.8vw, 18px);
-  display: grid;
-  grid-template-rows: auto 1fr auto;
-  gap: clamp(10px, 1.5vw, 16px);
-} */
-
+/* ===== Layout Shell ===== */
 .Layout {
-  min-height: 100svh;
-  width: min(98%);
+  height: 100svh;
+  width: min(100%, 1680px);
   margin: 0 auto;
-  padding: clamp(8px, 1.8vw, 18px);
-
+  padding: 12px;
   display: grid;
   grid-template-rows: auto 1fr auto;
-  gap: clamp(10px, 1.5vw, 16px);
-
-  box-sizing: border-box;
-}
-.Layout > header,
-.Layout > footer {
-  background: transparent;
+  gap: 12px;
 }
 
+/* ===== Header Region ===== */
+.Layout > header {
+  position: sticky;
+  top: 10px;
+  z-index: 100;
+}
+
+/* ===== Main Region ===== */
 .Layout > main {
+  display: flex;
   min-height: 0;
-  padding: clamp(12px, 2vw, 18px);
-  background: rgba(255, 255, 255, 0.78);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 12px;
+  border-radius: 14px;
   border: 1px solid var(--border);
-  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(17, 26, 46, 0.96) 0%, rgba(13, 20, 34, 0.96) 100%);
   box-shadow: var(--shadow);
 }
 
-.Layout > main > * {
+.Layout .main-content-shell {
+  display: flex;
+  flex: 1;
+  min-height: 0;
   width: 100%;
 }
 
-.Layout > footer {
-  padding: 12px 16px;
-  border-radius: 18px;
-  background: linear-gradient(135deg, #4facfe 0%, #1f8ef5 100%);
-  color: white;
-  box-shadow: var(--shadow);
+.Layout .main-content-shell > * {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
 }
 
-@media (max-width: 600px) {
+/* ===== Main Scrollbar ===== */
+.Layout > main::-webkit-scrollbar {
+  width: 10px;
+}
+
+.Layout > main::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 999px;
+}
+
+.Layout > main::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.35);
+  border-radius: 999px;
+  border: 2px solid rgba(10, 16, 28, 0.7);
+}
+
+.Layout > main::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.5);
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
   .Layout {
     padding: 8px;
+    gap: 8px;
   }
 
-  .Layout > main,
-  .Layout > footer {
-    border-radius: 14px;
+  .Layout > header {
+    top: 6px;
+  }
+
+  .Layout > main {
+    border-radius: 10px;
   }
 }

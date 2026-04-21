@@ -45,7 +45,6 @@ export default function Card({ coin, isTracked, onToggleTrack }: Props) {
         </div>
       </article>
 
-      {/* MODAL */}
       {showDetails && (
         <div className='modal-overlay' onClick={() => setShowDetails(false)}>
           <div className='modal' onClick={(e) => e.stopPropagation()}>

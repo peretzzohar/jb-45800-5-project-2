@@ -1,19 +1,21 @@
+/* ===== More Info Shell ===== */
 .more-info {
 	width: min(540px, 100%);
 	margin: 12px auto;
 	padding: 16px;
-	border: 1px solid #dbe1ea;
+	border: 1px solid var(--border);
 	border-radius: 12px;
-	background: #fff;
-	box-shadow: 0 6px 18px rgba(8, 30, 66, 0.08);
+	background: linear-gradient(180deg, rgba(17, 26, 46, 0.92) 0%, rgba(11, 18, 31, 0.92) 100%);
+	box-shadow: 0 14px 30px rgba(2, 8, 20, 0.4);
 }
 
 .more-info.error {
-	border-color: #f0b8be;
-	color: #842029;
-	background: #fff5f6;
+	border-color: rgba(234, 57, 67, 0.5);
+	color: #fecdd3;
+	background: rgba(234, 57, 67, 0.1);
 }
 
+/* ===== Header ===== */
 .more-info-header {
 	display: flex;
 	align-items: center;
@@ -29,15 +31,16 @@
 
 .more-info-header h2 {
 	margin: 0;
-	color: #1b2f4d;
+	color: var(--text-strong);
 }
 
 .more-info .symbol {
 	margin: 2px 0 0;
-	color: #61708b;
+	color: var(--text-muted);
 	font-weight: 600;
 }
 
+/* ===== Grid ===== */
 .more-info-grid {
 	margin: 0;
 	display: grid;
@@ -46,21 +49,42 @@
 }
 
 .more-info-grid div {
-	border: 1px solid #e6edf8;
+	border: 1px solid rgba(255, 255, 255, 0.1);
 	border-radius: 10px;
 	padding: 10px;
-	background: #f8fbff;
+	background: rgba(9, 16, 28, 0.72);
 }
 
 .more-info-grid dt {
 	font-size: 12px;
-	color: #6a7891;
+	color: var(--text-muted);
 	margin-bottom: 4px;
 }
 
 .more-info-grid dd {
 	margin: 0;
 	font-weight: 700;
-	color: #1d3557;
+	color: #e8f1ff;
+	font-family: var(--mono);
+}
+
+.more-info h5 {
+	margin: 10px 0;
+	font-size: 12px;
+	font-weight: 600;
+	letter-spacing: 0.3px;
+	text-transform: uppercase;
+	color: var(--text-muted);
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 600px) {
+	.more-info {
+		padding: 12px;
+	}
+
+	.more-info-grid {
+		grid-template-columns: 1fr;
+	}
 }
 

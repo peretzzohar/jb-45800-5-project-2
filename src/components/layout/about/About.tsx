@@ -6,7 +6,6 @@ export default function About() {
 
       <h1>About The Project</h1>
 
-      {/* Project Description */}
       <section className="about-section">
         <h2>📊 About the Project</h2>
         <p>
@@ -18,15 +17,13 @@ export default function About() {
         </p>
       </section>
 
-      {/* Personal Info */}
       <section className="developer-section">
         <h2> Developer</h2>
         <p><b>Name:</b> Zohar Peretz</p>
         <p><b>Project2:</b> Crypto Tracker App (React + TypeScript)</p>
-        {/* <p><b>Skills:</b> API integration, React hooks, state management, responsive design</p> */}
       </section>
 
-      {/* Image */}
+   
       {/* <section className="image-section">
         <h2>📸 My Photo</h2>
 

@@ -1,0 +1,12 @@
+/* ===== App Root ===== */
+.App {
+	width: 100%;
+	min-height: 100%;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 600px) {
+	.App {
+		min-height: 100%;
+	}
+}

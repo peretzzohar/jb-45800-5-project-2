@@ -18,7 +18,6 @@ export default function Main({ searchTerm }: MainProps) {
       <Route path="/feed" element={<Feed />} />
       <Route path="/recommendation" element={<Recommendation />} />
       <Route path="/about" element={<About />} />
-      {/* <Route path="/templates" element={<Templates />} /> */}
       <Route path="*" element={<NotFound />} />
     </Routes>
   )

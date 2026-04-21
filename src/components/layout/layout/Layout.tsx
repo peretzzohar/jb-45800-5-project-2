@@ -1,6 +1,4 @@
-// import Home from '../Home/Home'
 import { useState } from 'react'
-import Footer from '../footer/Footer'
 import Header from '../header/Header'
 import Main from '../main/Main-Nav'
 import './Layout.css'
@@ -16,12 +14,11 @@ export default function Layout() {
             </header>
            
             <main>
-                <Main searchTerm={searchTerm} />
+                <div className='main-content-shell'>
+                    <Main searchTerm={searchTerm} />
+                </div>
             </main>
 
-            <footer>
-                <Footer />
-            </footer>
         </div>
     )
 }

@@ -134,7 +134,6 @@ export default function Home({ searchTerm }: HomeProps) {
 
   return (
     <div className='Body'>
-      {/* <h2>Top 100 Coins</h2> */}
 
       {isLoading && <p>Loading coins...</p>}
       {error && <p>{error}</p>}
