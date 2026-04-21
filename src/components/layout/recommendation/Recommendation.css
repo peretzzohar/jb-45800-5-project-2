@@ -110,7 +110,11 @@
 	color: #0c8b58;
 }
 
-.decision.avoid {
+.decision.hold {
+	color: #b7791f;
+}
+
+.decision.sell {
 	color: #c0392b;
 }
 

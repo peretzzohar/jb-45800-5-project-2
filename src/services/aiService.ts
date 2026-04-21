@@ -11,6 +11,7 @@ export type AiMetrics = {
 };
 
 export type AiResult = {
+    recommendation: "BUY" | "HOLD" | "SELL";
     should_buy: boolean;
     explanation: string;
 };
@@ -31,91 +32,147 @@ function buildMessages(metrics: AiMetrics): ChatMessage[] {
         {
             role: "system",
             content: `
-You are a data analysis assistant.
+You are a professional cryptocurrency analyst.
 
-You analyze numeric data and return a decision.
+Analyze the provided cryptocurrency data and return ONLY valid JSON.
 
-Return ONLY valid JSON:
-
+Required JSON format:
 {
-  "should_buy": boolean,
-  "explanation": string
+    "metrics": {
+        "name": string,
+        "usd_price_current": number,
+        "usd_cap_market": number,
+        "usd_h24_volume": number,
+        "currency_in_d30_percentage_change_price": number | null,
+        "currency_in_d60_percentage_change_price": number | null,
+        "currency_in_d200_percentage_change_price": number | null
+    },
+  "recommendation": "BUY" | "HOLD" | "SELL",
+    "should_buy": boolean,
+    "explanation": string
 }
 
 Rules:
-- Only JSON
+- Copy the metrics EXACTLY as received (do not change values)
+- recommendation must be BUY / HOLD / SELL
+- should_buy = true only if recommendation is BUY
+- explanation must be short (2-3 sentences)
 - No markdown
 - No extra text
-- Keep explanation short
+- No code blocks
+- Only JSON
 `
         },
         {
             role: "user",
-            content: `Analyze this data:\n${JSON.stringify(metrics, null, 2)}`
+                        content: JSON.stringify({ metrics }, null, 2)
         }
     ];
 }
+
 function extract(content: string): AiResult {
     try {
         console.log("RAW AI:", content);
 
-        const trimmed = content.trim();
-        const withoutCodeFence = trimmed
-            .replace(/^```json\s*/i, "")
-            .replace(/^```\s*/i, "")
-            .replace(/\s*```$/i, "")
+        const cleaned = content
+            .replace(/```json|```/gi, "")
             .trim();
 
-        let parsed: unknown;
-        try {
-            parsed = JSON.parse(withoutCodeFence);
-        } catch {
-            const firstBrace = withoutCodeFence.indexOf("{");
-            const lastBrace = withoutCodeFence.lastIndexOf("}");
+        const recommendationLineMatch = cleaned.match(/Recommendation:\s*(BUY|HOLD|SELL)/i);
+        const explanationLineMatch = cleaned.match(/Explanation:\s*([\s\S]+)/i);
 
-            if (firstBrace < 0 || lastBrace <= firstBrace) {
+        if (recommendationLineMatch) {
+            const recommendation = recommendationLineMatch[1].toUpperCase() as "BUY" | "HOLD" | "SELL";
+            const explanationText = explanationLineMatch?.[1]?.trim();
+
+            return {
+                recommendation,
+                should_buy: recommendation === "BUY",
+                explanation: explanationText && explanationText.length > 0 ? explanationText : "No explanation",
+            };
+        }
+
+        let parsed: unknown;
+
+        try {
+            parsed = JSON.parse(cleaned);
+        } catch {
+            const start = cleaned.indexOf("{");
+            const end = cleaned.lastIndexOf("}");
+
+            if (start === -1 || end === -1) {
                 throw new Error("No JSON found");
             }
 
-            const jsonCandidate = withoutCodeFence.slice(firstBrace, lastBrace + 1).trim();
-            parsed = JSON.parse(jsonCandidate);
+            parsed = JSON.parse(cleaned.slice(start, end + 1));
         }
 
         if (typeof parsed !== "object" || parsed === null) {
-            throw new Error("Invalid schema");
+            throw new Error("Invalid JSON schema");
         }
 
-        const recommendation = parsed as {
+        const data = parsed as {
+            metrics?: unknown;
+            recommendation?: unknown;
+            Recommendation?: unknown;
             should_buy?: unknown;
             explanation?: unknown;
+            Explanation?: unknown;
         };
 
-        if (typeof recommendation.should_buy !== "boolean") {
-            throw new Error("Invalid schema");
+        const recommendationRaw =
+            data.recommendation ||
+            data.Recommendation;
+
+        const explanationRaw =
+            data.explanation ||
+            data.Explanation;
+
+        if (data.metrics !== undefined && (typeof data.metrics !== "object" || data.metrics === null)) {
+            throw new Error("Invalid metrics");
+        }
+
+        if (typeof recommendationRaw !== "string") {
+            throw new Error("Invalid recommendation");
+        }
+
+        const recommendation = recommendationRaw.toUpperCase();
+
+        if (!["BUY", "HOLD", "SELL"].includes(recommendation)) {
+            throw new Error("Invalid value");
+        }
+
+        const explanation =
+            typeof explanationRaw === "string" && explanationRaw.trim() !== ""
+                ? explanationRaw.trim()
+                : "No explanation";
+
+        const shouldBuyByRule = recommendation === "BUY";
+
+        if (typeof data.should_buy === "boolean" && data.should_buy !== shouldBuyByRule) {
+            console.warn("AI returned inconsistent should_buy. Normalizing by recommendation.");
         }
 
         return {
-            should_buy: recommendation.should_buy,
-            explanation:
-                typeof recommendation.explanation === "string" && recommendation.explanation.trim() !== ""
-                    ? recommendation.explanation.trim()
-                    : "No explanation",
+            recommendation: recommendation as "BUY" | "HOLD" | "SELL",
+            should_buy: shouldBuyByRule,
+            explanation,
         };
+
     } catch {
         console.error("PARSE FAILED:", content);
 
-        const preview = content.trim().slice(0, 500);
-
         return {
+            recommendation: "HOLD",
             should_buy: false,
-            explanation: preview ? `Raw AI response: ${preview}` : "AI response was empty",
+            explanation: "Failed to parse AI response",
         };
     }
 }
 
 async function callAI(messages: ChatMessage[], apiKey: string): Promise<AiResult> {
     if (!apiKey) {
-        return { should_buy: false, explanation: "Missing API key" };
+        return { recommendation: "HOLD", should_buy: false, explanation: "Missing API key" };
     }
 
     const { data } = await axios.post("http://localhost:3001/api/ai", {
@@ -128,8 +185,9 @@ async function callAI(messages: ChatMessage[], apiKey: string): Promise<AiResult
     if (typeof content !== "string") {
         console.error("BAD RESPONSE:", data);
         return {
+            recommendation: "HOLD",
             should_buy: false,
-            explanation: "No AI content returned (likely blocked or safety filter)",
+            explanation: "No AI content returned",
         };
     }
 

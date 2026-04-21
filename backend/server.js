@@ -13,54 +13,6 @@ app.use(express.json());
 const NVIDIA_BASE_URL = "https://integrate.api.nvidia.com/v1";
 const MODEL = "meta/llama-3.1-8b-instruct";
 
-function normalizeAiResponse(content) {
-  try {
-    const trimmed = String(content || "").trim();
-    const withoutCodeFence = trimmed
-      .replace(/^```json\s*/i, "")
-      .replace(/^```\s*/i, "")
-      .replace(/\s*```$/i, "")
-      .trim();
-
-    let parsed;
-    try {
-      parsed = JSON.parse(withoutCodeFence);
-    } catch {
-      const firstBrace = withoutCodeFence.indexOf("{");
-      const lastBrace = withoutCodeFence.lastIndexOf("}");
-
-      if (firstBrace < 0 || lastBrace <= firstBrace) {
-        throw new Error("No JSON found");
-      }
-
-      parsed = JSON.parse(withoutCodeFence.slice(firstBrace, lastBrace + 1));
-    }
-
-    if (typeof parsed !== "object" || parsed === null) {
-      throw new Error("Invalid JSON object");
-    }
-
-    const recommendation = parsed;
-    if (typeof recommendation.should_buy !== "boolean") {
-      throw new Error("Missing should_buy boolean");
-    }
-
-    return {
-      should_buy: recommendation.should_buy,
-      explanation:
-        typeof recommendation.explanation === "string" && recommendation.explanation.trim() !== ""
-          ? recommendation.explanation.trim()
-          : "No explanation",
-    };
-  } catch {
-    const preview = String(content || "").trim().slice(0, 500);
-    return {
-      should_buy: false,
-      explanation: preview ? `Raw AI response: ${preview}` : "AI response was empty",
-    };
-  }
-}
-
 app.post("/api/ai", async (req, res) => {
   try {
     const { messages, apiKey } = req.body || {};
@@ -99,21 +51,16 @@ app.post("/api/ai", async (req, res) => {
       stream: false,
     });
 
-    console.log("RAW RESPONSE:", JSON.stringify(completion, null, 2));
+    const content = completion?.choices?.[0]?.message?.content;
 
-   const content = completion?.choices?.[0]?.message?.content;
-
-if (!content) {
-    return res.json({
+    if (!content) {
+      return res.json({
         error: "Blocked or empty response",
-        raw: completion
-    });
-}
+        raw: completion,
+      });
+    }
 
-return res.json({ content });
-
-    const result = normalizeAiResponse(content);
-    return res.json(result);
+    return res.json({ content });
   } catch (err) {
     console.error("AI ERROR:", err?.message || err);
     return res.status(500).json({ error: "AI request failed" });

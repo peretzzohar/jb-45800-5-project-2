@@ -164,6 +164,9 @@ export default function Recommendation() {
 		[selectedCoinId, apiKey],
 	)
 
+	const decisionClass = result ? `decision ${result.recommendation.toLowerCase()}` : 'decision'
+	const decisionText = result ? `AI suggests ${result.recommendation}` : ''
+
 	const handleGetRecommendation = async () => {
 		try {
 			setLoading(true)
@@ -190,7 +193,7 @@ export default function Recommendation() {
 		<section className='Recommendation'>
 			<header className='recommendation-header'>
 				<h2>AI Crypto Recommendation</h2>
-				<p>Select a tracked coin and get a real-time BUY or NOT BUY signal from AI.</p>
+				<p>Select a tracked coin and get a real-time BUY, HOLD, or SELL signal from AI.</p>
 			</header>
 
 			<form
@@ -247,10 +250,8 @@ export default function Recommendation() {
 			{result && (
 				<article className='recommendation-card'>
 					<h3>{coinName}</h3>
-					<p className={result.should_buy ? 'decision buy' : 'decision avoid'}>
-						{result.should_buy ? 'AI suggests BUY' : 'AI suggests NOT BUY'}
-					</p>
-					<p className='reason'>{`AI suggests ${result.explanation}`}</p>
+					<p className={decisionClass}>{decisionText}</p>
+					<p className='reason'>{result.explanation}</p>
 				</article>
 			)}
 		</section>
