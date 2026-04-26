@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import axios from 'axios'
 import mainService from '../../../services/mainService'
+import { formatApiError, getJsonWithRetry } from '../../../services/apiClient'
 import {
 	createChart,
 	AreaSeries,
@@ -14,10 +14,11 @@ import {
 	type Time,
 	type UTCTimestamp,
 } from 'lightweight-charts'
+import Spinner from '../../common/spinner/Spinner'
 import './Feed.css'
 
 const TRACKED_COIN_SYMBOLS_KEY = 'trackedCoinSymbols'
-const REFRESH_MS = 30_000
+const LIVE_REFRESH_MS = 1_000
 const HISTORY_DAYS = 30
 const HOURS_LIMIT = HISTORY_DAYS * 24
 const MAX_POINTS = HOURS_LIMIT
@@ -58,6 +59,8 @@ type CryptoCompareHistoryResponse = {
 	}
 }
 
+type LivePricesResponse = Record<string, { USD?: number }>
+
 type DashboardSeries = {
 	price: ISeriesApi<'Area'>
 	sma: ISeriesApi<'Line'>
@@ -79,6 +82,11 @@ function normalizeTime(rawTime: number | string): number {
 function buildHistoryUrl(symbol: string): string {
 	const fsym = normalizeTrackedSymbol(symbol)
 	return `https://min-api.cryptocompare.com/data/v2/histohour?fsym=${encodeURIComponent(fsym)}&tsym=USD&limit=${HOURS_LIMIT}&aggregate=1`
+}
+
+function buildLivePricesUrl(symbols: string[]): string {
+	const fsyms = symbols.map((symbol) => normalizeTrackedSymbol(symbol)).join(',')
+	return `https://min-api.cryptocompare.com/data/pricemulti?fsyms=${encodeURIComponent(fsyms)}&tsyms=USD`
 }
 
 function readTrackedSymbols(): string[] {
@@ -545,7 +553,7 @@ export default function Feed() {
 
 		let mounted = true
 
-		const fetchAll = async () => {
+		const loadHistory = async () => {
 			try {
 				if (firstLoadRef.current) {
 					setLoading(true)
@@ -553,7 +561,7 @@ export default function Feed() {
 
 				const responses = await Promise.all(
 					watchedSymbols.map(async (symbol) => {
-						const { data } = await axios.get<CryptoCompareHistoryResponse>(buildHistoryUrl(symbol))
+						const data = await getJsonWithRetry<CryptoCompareHistoryResponse>(buildHistoryUrl(symbol))
 						return { symbol, data }
 					})
 				)
@@ -587,6 +595,59 @@ export default function Feed() {
 				setLoading(false)
 				firstLoadRef.current = false
 				chartRef.current?.timeScale().fitContent()
+			} catch (requestError) {
+				if (!mounted) return
+				setError(formatApiError(requestError, 'Unable to load chart history right now. Please try again.'))
+				setLoading(false)
+				firstLoadRef.current = false
+			}
+		}
+
+		const fetchLivePrices = async () => {
+			try {
+				const data = await getJsonWithRetry<LivePricesResponse>(buildLivePricesUrl(watchedSymbols))
+				if (!mounted) return
+
+				setRows((prev) => {
+					const prevBySymbol = new Map(prev.map((row) => [row.symbol, row]))
+
+					return watchedSymbols.map((symbol) => {
+						const normalized = normalizeTrackedSymbol(symbol)
+						const livePrice = data[normalized]?.USD
+						const previousRow = prevBySymbol.get(symbol)
+						const nextPrice = Number.isFinite(livePrice) ? (livePrice as number) : (previousRow?.price ?? null)
+
+						if (nextPrice != null) {
+							const previousData = historyRef.current[symbol] ?? []
+							const nowSeconds = Math.floor(Date.now() / 1000) as UTCTimestamp
+							let nextData = previousData
+
+							if (previousData.length === 0) {
+								nextData = [{ time: nowSeconds, value: nextPrice }]
+							} else {
+								const last = previousData[previousData.length - 1]
+								if (last.time === nowSeconds) {
+									nextData = [...previousData.slice(0, -1), { time: nowSeconds, value: nextPrice }]
+								} else {
+									nextData = [...previousData, { time: nowSeconds, value: nextPrice }].slice(-MAX_POINTS)
+								}
+							}
+
+							patchSeriesData(symbol, nextData)
+						}
+
+						const latestHistory = historyRef.current[symbol] ?? []
+						const latestValue = nextPrice ?? latestHistory[latestHistory.length - 1]?.value ?? null
+
+						return {
+							symbol,
+							price: latestValue,
+							changePct24h: calculate24hChange(latestHistory),
+						}
+					})
+				})
+
+				setError('')
 				setLastUpdated(
 					new Date().toLocaleTimeString([], {
 						hour: '2-digit',
@@ -594,16 +655,18 @@ export default function Feed() {
 						second: '2-digit',
 					})
 				)
-			} catch {
+			} catch (requestError) {
 				if (!mounted) return
-				setError('Unable to fetch chart data from CryptoCompare.')
-				setLoading(false)
-				firstLoadRef.current = false
+				setError(formatApiError(requestError, 'Unable to load live prices right now. Please try again.'))
 			}
 		}
 
-		fetchAll()
-		const intervalId = setInterval(fetchAll, REFRESH_MS)
+		loadHistory().then(() => {
+			if (!mounted) return
+			fetchLivePrices()
+		})
+
+		const intervalId = setInterval(fetchLivePrices, LIVE_REFRESH_MS)
 
 		return () => {
 			mounted = false
@@ -714,9 +777,7 @@ export default function Feed() {
 					<div className='chart-shell'>
 						{showLoading && (
 							<div className='chart-skeleton'>
-								<span />
-								<span />
-								<span />
+								<Spinner label='Loading chart data...' />
 							</div>
 						)}
 

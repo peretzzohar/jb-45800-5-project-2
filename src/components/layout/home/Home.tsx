@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import type { CoinCardItem } from '../card/Card'
 import Card from '../card/Card'
 import mainService from '../../../services/mainService'
+import Spinner from '../../common/spinner/Spinner'
 import './Home.css'
 
 const TRACKED_COIN_IDS_KEY = 'trackedCoinIds'
@@ -31,16 +32,9 @@ export default function Home({ searchTerm }: HomeProps) {
   const [showTrackLimitModal, setShowTrackLimitModal] = useState(false)
   const [pendingCoinId, setPendingCoinId] = useState<string | null>(null)
   const [coinsToRemoveIds, setCoinsToRemoveIds] = useState<string[]>([])
+  const [debouncedSearch, setDebouncedSearch] = useState(searchTerm)
 
-  const normalizedSearch = searchTerm.trim().toLowerCase()
-  const filteredCoins = coins.filter((coin) => {
-    if (!normalizedSearch) return true
-
-    return (
-      coin.name.toLowerCase().includes(normalizedSearch) ||
-      coin.symbol.toLowerCase().includes(normalizedSearch)
-    )
-  })
+  const filteredCoins = coins
 
   const trackedCoins = coins.filter((coin) => trackedCoinIds.includes(coin.id))
 
@@ -92,12 +86,25 @@ export default function Home({ searchTerm }: HomeProps) {
   }
 
   useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setDebouncedSearch(searchTerm)
+    }, 300)
+
+    return () => {
+      window.clearTimeout(timeoutId)
+    }
+  }, [searchTerm])
+
+  useEffect(() => {
     async function fetchCoins() {
       try {
         setIsLoading(true)
         setError('')
 
-        const data = await mainService.getCoins()
+        const data = await mainService.getCoins({
+          search: debouncedSearch,
+          limit: 100,
+        })
 
         const mapped = data.map((c) => ({
         id: c.id,
@@ -119,7 +126,7 @@ export default function Home({ searchTerm }: HomeProps) {
     }
 
     fetchCoins()
-  }, [])
+  }, [debouncedSearch])
 
   useEffect(() => {
     localStorage.setItem(TRACKED_COIN_IDS_KEY, JSON.stringify(trackedCoinIds))
@@ -135,7 +142,7 @@ export default function Home({ searchTerm }: HomeProps) {
   return (
     <div className='Body'>
 
-      {isLoading && <p>Loading coins...</p>}
+      {isLoading && <Spinner label='Loading coins...' />}
       {error && <p>{error}</p>}
 
       {!isLoading && !error && (
@@ -158,7 +165,7 @@ export default function Home({ searchTerm }: HomeProps) {
       )}
 
       {!isLoading && !error && filteredCoins.length === 0 && (
-        <p>No currencies match "{searchTerm}".</p>
+        <p>No currencies match "{debouncedSearch}".</p>
       )}
 
       {showTrackLimitModal && (

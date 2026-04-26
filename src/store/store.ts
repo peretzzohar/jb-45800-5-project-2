@@ -1,68 +1,31 @@
-import { configureStore, createSlice, type PayloadAction } from '@reduxjs/toolkit'
+import { configureStore } from '@reduxjs/toolkit'
+import { counterReducer, decrement, increment, reset } from './counter.slice'
+import {
+  marketReducer,
+  resetMarket,
+  setSelectedSymbol,
+  setTrackedCoinIds,
+  setTrackedCoinSymbols,
+} from './market.slice'
+import { resetUi, setSearchTerm, uiReducer } from './ui.slice'
 
-type MarketState = {
-  trackedCoinIds: string[]
-  trackedCoinSymbols: string[]
-  selectedSymbol: string
-}
-
-type UiState = {
-  searchTerm: string
-}
-
-
-const initialMarketState: MarketState = {
-  trackedCoinIds: [],
-  trackedCoinSymbols: [],
-  selectedSymbol: '',
-}
-
-const marketSlice = createSlice({
-  name: 'market',
-  initialState: initialMarketState,
-  reducers: {
-    setTrackedCoinIds: (state, action: PayloadAction<string[]>) => {
-      state.trackedCoinIds = action.payload
-    },
-    setTrackedCoinSymbols: (state, action: PayloadAction<string[]>) => {
-      state.trackedCoinSymbols = action.payload
-    },
-    setSelectedSymbol: (state, action: PayloadAction<string>) => {
-      state.selectedSymbol = action.payload
-    },
-    resetMarket: () => initialMarketState,
-  },
-})
-
-const uiSlice = createSlice({
-  name: 'ui',
-  initialState: {
-    searchTerm: '',
-  } as UiState,
-  reducers: {
-    setSearchTerm: (state, action: PayloadAction<string>) => {
-      state.searchTerm = action.payload
-    },
-    resetUi: (state) => {
-      state.searchTerm = ''
-    },
-  },
-})
-
-export const {
+export {
+  increment,
+  decrement,
+  reset,
   setTrackedCoinIds,
   setTrackedCoinSymbols,
   setSelectedSymbol,
   resetMarket,
-} = marketSlice.actions
-
-
-export const { setSearchTerm, resetUi } = uiSlice.actions
+  setSearchTerm,
+  resetUi,
+}
 
 export const store = configureStore({
   reducer: {
-    market: marketSlice.reducer,
-    ui: uiSlice.reducer,
+    counter: counterReducer,
+    market: marketReducer,
+    ui: uiReducer,
   },
 })
 

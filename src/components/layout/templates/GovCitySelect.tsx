@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import govService from '../../../services/currencyService'
+import Spinner from '../../common/spinner/Spinner'
 
 interface GovCitySelectProps {
   value: string
@@ -52,7 +53,7 @@ export default function GovCitySelect({ value, onChange }: GovCitySelectProps) {
       <h2>API City Selector</h2>
       <p>Choose a city loaded from the government service.</p>
 
-      {loading && <p className='status-message'>Loading cities...</p>}
+      {loading && <Spinner label='Loading cities...' />}
       {!loading && error && <p className='status-message error'>{error}</p>}
 
       {!loading && !error && (

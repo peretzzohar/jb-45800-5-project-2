@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import AiService, { type AiMetrics, type AiResult } from '../../../services/aiService.ts'
+import { formatApiError, getJsonWithRetry } from '../../../services/apiClient'
+import Spinner from '../../common/spinner/Spinner'
 import './Recommendation.css'
 
 const TRACKED_COIN_IDS_KEY = 'trackedCoinIds'
@@ -83,7 +85,7 @@ function saveLastSelectedCoin(coinId: string): void {
 
 function buildRecommendationUrl(coinId: string): string {
 	if (!RECOMMENDATION_URL || RECOMMENDATION_URL.trim() === '') {
-		return `https://api.coingecko.com/api/v3/coins/${encodeURIComponent(coinId)}?market_data=true`
+		return `/api/coins/${encodeURIComponent(coinId)}?market_data=true`
 	}
 
 	if (RECOMMENDATION_URL.includes(COIN_ID_PLACEHOLDER)) {
@@ -108,14 +110,17 @@ function extractPromptMetrics(data: CoinRecommendationResponse): AiMetrics {
 	}
 }
 
+async function getCoinRecommendationData(url: string): Promise<CoinRecommendationResponse> {
+	return getJsonWithRetry<CoinRecommendationResponse>(url)
+}
+
 export default function Recommendation() {
 	const [trackedCoinIds, setTrackedCoinIds] = useState<string[]>(() => readTrackedCoinIds())
 	const [apiKey, setApiKey] = useState<string>(() => readSavedApiKey())
 	const [selectedCoinId, setSelectedCoinId] = useState<string>(() => readLastSelectedCoin())
 	const [loading, setLoading] = useState(false)
 	const [error, setError] = useState('')
-	const [coinName, setCoinName] = useState('')
-	const [result, setResult] = useState<AiResult | null>(null)
+	const [resultsByCoinId, setResultsByCoinId] = useState<Record<string, { coinName: string; result: AiResult }>>({})
 
 	useEffect(() => {
 		try {
@@ -159,31 +164,62 @@ export default function Recommendation() {
 		saveLastSelectedCoin(trackedCoinIds[0])
 	}, [selectedCoinId, trackedCoinIds])
 
-	const canRequest = useMemo(
-		() => Boolean(selectedCoinId) && Boolean(apiKey.trim()),
-		[selectedCoinId, apiKey],
-	)
+	const canRequest = useMemo(() => Boolean(trackedCoinIds.length) && Boolean(apiKey.trim()), [trackedCoinIds.length, apiKey])
 
-	const decisionClass = result ? `decision ${result.recommendation.toLowerCase()}` : 'decision'
-	const decisionText = result ? `AI suggests ${result.recommendation}` : ''
+	const selectedEntry = resultsByCoinId[selectedCoinId]
+	const selectedResult = selectedEntry?.result ?? null
+	const selectedCoinName = selectedEntry?.coinName ?? selectedCoinId
+
+	const decisionClass = selectedResult ? `decision ${selectedResult.recommendation.toLowerCase()}` : 'decision'
+	const decisionText = selectedResult ? `AI suggests ${selectedResult.recommendation}` : ''
 
 	const handleGetRecommendation = async () => {
 		try {
 			setLoading(true)
 			setError('')
-			setResult(null)
 
-			const recommendationUrl = buildRecommendationUrl(selectedCoinId)
+			if (!trackedCoinIds.length) {
+				setResultsByCoinId({})
+				return
+			}
 
-			const coinResponse = await fetch(recommendationUrl)
-			const coinData = (await coinResponse.json()) as CoinRecommendationResponse
-			setCoinName(coinData.name)
+			const settledResults = await Promise.allSettled(
+				trackedCoinIds.map(async (coinId) => {
+					const recommendationUrl = buildRecommendationUrl(coinId)
+					const coinData = await getCoinRecommendationData(recommendationUrl)
+					const metrics = extractPromptMetrics(coinData)
+					const aiResult = await AiService.getRecommendation(metrics)
 
-			const metrics = extractPromptMetrics(coinData)
-			const aiResult = await AiService.getRecommendation(metrics)
-			setResult(aiResult)
+					return {
+						coinId,
+						coinName: coinData.name || coinId,
+						result: aiResult,
+					}
+				})
+			)
+
+			const nextResults: Record<string, { coinName: string; result: AiResult }> = {}
+			let failedCount = 0
+
+			settledResults.forEach((entry) => {
+				if (entry.status === 'fulfilled') {
+					nextResults[entry.value.coinId] = {
+						coinName: entry.value.coinName,
+						result: entry.value.result,
+					}
+					return
+				}
+
+				failedCount += 1
+			})
+
+			setResultsByCoinId(nextResults)
+
+			if (failedCount > 0) {
+				setError('Some recommendations could not be loaded. Please try again.')
+			}
 		} catch (err) {
-			setError(err instanceof Error ? err.message : 'Error')
+			setError(formatApiError(err, 'Unable to load recommendations right now. Please try again.'))
 		} finally {
 			setLoading(false)
 		}
@@ -239,19 +275,20 @@ export default function Recommendation() {
 						</div>
 
 						<button type='submit' className='recommend-btn' disabled={!canRequest || loading}>
-							{loading ? 'Getting AI recommendation...' : 'Get AI Recommendation'}
+							{loading ? 'Getting AI recommendations...' : 'Get AI Recommendations'}
 						</button>
 					</>
 				)}
 			</form>
 
 			{error && <p className='status-message error'>{error}</p>}
+			{loading && <Spinner label='Getting AI recommendations...' />}
 
-			{result && (
+			{selectedResult && (
 				<article className='recommendation-card'>
-					<h3>{coinName}</h3>
+					<h3>{selectedCoinName}</h3>
 					<p className={decisionClass}>{decisionText}</p>
-					<p className='reason'>{result.explanation}</p>
+					<p className='reason'>{selectedResult.explanation}</p>
 				</article>
 			)}
 		</section>

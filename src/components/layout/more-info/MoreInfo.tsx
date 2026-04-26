@@ -3,6 +3,7 @@ import './MoreInfo.css'
 import type { CoinCardItem } from '../card/Card'
 import currencyService from '../../../services/currencyService'
 import type { Coin } from '../../../services/mainService'
+import Spinner from '../../common/spinner/Spinner'
 
 type Props = {
   coin: CoinCardItem
@@ -47,7 +48,11 @@ export default function MoreInfo({ coin }: Props) {
   }, [coin.id])
 
   if (isLoading) {
-    return <section className='more-info'>Loading coin info...</section>
+    return (
+      <section className='more-info'>
+        <Spinner label='Loading coin info...' />
+      </section>
+    )
   }
 
   if (error) {

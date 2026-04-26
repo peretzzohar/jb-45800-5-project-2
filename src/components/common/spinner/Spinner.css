@@ -1,0 +1,17 @@
+.spinner {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.spinner-image {
+  display: block;
+  object-fit: contain;
+}
+
+.spinner-label {
+  margin: 0;
+  color: var(--text-dim, #95a3b8);
+  font-size: 0.92rem;
+  letter-spacing: 0.02em;
+}
