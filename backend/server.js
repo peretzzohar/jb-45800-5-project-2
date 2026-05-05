@@ -45,9 +45,9 @@ app.post("/api/ai", async (req, res) => {
         },
         ...messages,
       ],
-      temperature: 0.3,
-      top_p: 0.9,
-      max_tokens: 500,
+      temperature: 0.2,
+      top_p: 0.7,
+      max_tokens: 1024,
       stream: false,
     });
 

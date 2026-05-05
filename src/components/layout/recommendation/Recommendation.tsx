@@ -5,7 +5,7 @@ import Spinner from '../../common/spinner/Spinner'
 import './Recommendation.css'
 
 const TRACKED_COIN_IDS_KEY = 'trackedCoinIds'
-const OPENAI_API_KEY_STORAGE_KEY = 'openAiApiKey'
+const OPENAI_API_KEY_STORAGE_KEY = 'aiApiKey'
 const LAST_SELECTED_COIN_KEY = 'lastRecommendedCoinId'
 const COIN_ID_PLACEHOLDER = '<coin-id>'
 

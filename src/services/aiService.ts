@@ -21,7 +21,7 @@ type ChatMessage = {
     content: string;
 };
 
-const API_KEY_STORAGE = "openAiApiKey";
+const API_KEY_STORAGE = "aiApiKey";
 
 function getApiKey(): string {
     return localStorage.getItem(API_KEY_STORAGE) || "";
