@@ -31,6 +31,7 @@ The app uses Vite for fast development, and includes a backend folder for server
 - Express (backend)
 
 ## Run Locally
+...
 
 ```bash
 npm install
