@@ -776,7 +776,7 @@ export default function Feed() {
 				<div className='chart-column'>
 					<div className='chart-shell'>
 						{showLoading && (
-							<div className='chart-skeleton'>
+							<div className='chart-project2'>
 								<Spinner label='Loading chart data...' />
 							</div>
 						)}

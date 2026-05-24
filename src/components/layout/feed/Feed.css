@@ -317,7 +317,7 @@
   min-height: 0;
 }
 
-.chart-skeleton {
+.chart-project2 {
   position: absolute;
   inset: 0;
   z-index: 3;
@@ -329,7 +329,7 @@
   pointer-events: none;
 }
 
-.chart-skeleton span {
+.chart-project2 span {
   height: 10px;
   border-radius: 999px;
   background: linear-gradient(90deg, rgba(64, 80, 108, 0.5), rgba(114, 131, 159, 0.75), rgba(64, 80, 108, 0.5));
@@ -337,15 +337,15 @@
   animation: shimmer 1.3s linear infinite;
 }
 
-.chart-skeleton span:nth-child(1) {
+.chart-project2 span:nth-child(1) {
   width: 42%;
 }
 
-.chart-skeleton span:nth-child(2) {
+.chart-project2 span:nth-child(2) {
   width: 63%;
 }
 
-.chart-skeleton span:nth-child(3) {
+.chart-project2 span:nth-child(3) {
   width: 54%;
 }
 
