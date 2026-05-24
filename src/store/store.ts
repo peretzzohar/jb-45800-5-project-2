@@ -1,4 +1,5 @@
 import { configureStore } from '@reduxjs/toolkit'
+import { counterReducer, decrement, increment, reset } from './counter.slice'
 import {
   marketReducer,
   resetMarket,
@@ -18,6 +19,9 @@ import {
 } from './recommendation.slice'
 
 export {
+  increment,
+  decrement,
+  reset,
   setTrackedCoinIds,
   setTrackedCoinSymbols,
   setSelectedSymbol,
@@ -37,6 +41,7 @@ export {
 
 export const store = configureStore({
   reducer: {
+    counter: counterReducer,
     market: marketReducer,
     ui: uiReducer,
     coins: coinsReducer,

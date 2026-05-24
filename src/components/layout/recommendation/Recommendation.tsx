@@ -8,9 +8,14 @@ const TRACKED_COIN_IDS_KEY = 'trackedCoinIds'
 const OPENAI_API_KEY_STORAGE_KEY = 'aiApiKey'
 const LAST_SELECTED_COIN_KEY = 'lastRecommendedCoinId'
 const COIN_ID_PLACEHOLDER = '<coin-id>'
+const DEFAULT_RECOMMENDATION_PATH = '/api/coins'
 
 const RECOMMENDATION_URL = import.meta.env.VITE_AI_RECOMMENDATION_URL as string | undefined
 const NVIDIA_KEY_FROM_ENV = import.meta.env.VITE_NVIDIA_KEY as string | undefined
+
+function isDirectCoinGeckoCoinUrl(url: string): boolean {
+	return /^https?:\/\/api\.coingecko\.com\/api\/v3\/coins(?:\/|$)/i.test(url)
+}
 
 type CoinRecommendationResponse = {
 	id: string
@@ -84,8 +89,8 @@ function saveLastSelectedCoin(coinId: string): void {
 }
 
 function buildRecommendationUrl(coinId: string): string {
-	if (!RECOMMENDATION_URL || RECOMMENDATION_URL.trim() === '') {
-		return `/api/coins/${encodeURIComponent(coinId)}?market_data=true`
+	if (!RECOMMENDATION_URL || RECOMMENDATION_URL.trim() === '' || isDirectCoinGeckoCoinUrl(RECOMMENDATION_URL)) {
+		return `${DEFAULT_RECOMMENDATION_PATH}/${encodeURIComponent(coinId)}?market_data=true`
 	}
 
 	if (RECOMMENDATION_URL.includes(COIN_ID_PLACEHOLDER)) {

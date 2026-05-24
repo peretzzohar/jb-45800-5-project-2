@@ -1,5 +1,7 @@
 import axios from 'axios'
 
+const DETAILS_CACHE_TTL_MS = 2 * 60_000
+
 type Coin = {
   id: string
   name: string
@@ -45,12 +47,24 @@ type GovCityApiResponse = {
   }
 }
 
-const BASE_URL = import.meta.env.VITE_SERVER_URL_CURRENCY
+const DEFAULT_COINGECKO_PROXY_BASE = 'https://api.coingecko.com/api/v3/coins'
+const BASE_URL = import.meta.env.VITE_SERVER_URL_CURRENCY || DEFAULT_COINGECKO_PROXY_BASE
 
 class CurrencyService {
+  private readonly detailsCache = new Map<string, { expiresAt: number; data: MultiCurrencyResponse }>()
+  private readonly inFlightDetails = new Map<string, Promise<MultiCurrencyResponse>>()
+
+  private isDirectCoinGeckoUrl(url: string): boolean {
+    return /^https?:\/\/api\.coingecko\.com\/api\/v3\/coins\/?$/i.test(url)
+  }
 
   private getNormalizedBaseUrl(): string {
     const raw = (BASE_URL || '').trim()
+
+    if (!raw || this.isDirectCoinGeckoUrl(raw)) {
+      return DEFAULT_COINGECKO_PROXY_BASE
+    }
+
     return raw.endsWith('/') ? raw.slice(0, -1) : raw
   }
 
@@ -100,9 +114,53 @@ class CurrencyService {
         developer_data: false,
         sparkline: false,
       },
+      timeout: 10_000,
     })
 
     return data
+  }
+
+  private getCachedCoinDetails(coinId: string): MultiCurrencyResponse | null {
+    const cached = this.detailsCache.get(coinId)
+    if (!cached) return null
+
+    if (cached.expiresAt <= Date.now()) {
+      this.detailsCache.delete(coinId)
+      return null
+    }
+
+    return cached.data
+  }
+
+  private async getMultiCurrencyCoinDetails(coinId: string): Promise<MultiCurrencyResponse> {
+    const cacheKey = coinId.trim().toLowerCase()
+    const cached = this.getCachedCoinDetails(cacheKey)
+    if (cached) return cached
+
+    const inFlight = this.inFlightDetails.get(cacheKey)
+    if (inFlight) return inFlight
+
+    const request = this.getCoinById(coinId)
+      .then((coinDetails) => {
+        const data = {
+          usd: [this.mapCoinDetailsToCoin(coinDetails, 'usd')],
+          eur: [this.mapCoinDetailsToCoin(coinDetails, 'eur')],
+          ils: [this.mapCoinDetailsToCoin(coinDetails, 'ils')],
+        }
+
+        this.detailsCache.set(cacheKey, {
+          data,
+          expiresAt: Date.now() + DETAILS_CACHE_TTL_MS,
+        })
+
+        return data
+      })
+      .finally(() => {
+        this.inFlightDetails.delete(cacheKey)
+      })
+
+    this.inFlightDetails.set(cacheKey, request)
+    return request
   }
 
   async getCoinsAll(coinId?: string): Promise<MultiCurrencyResponse> {
@@ -110,16 +168,7 @@ class CurrencyService {
     const shouldUseCoinDetails = Boolean(coinId) && this.isCoinsRootUrl(normalizedBase)
 
     if (shouldUseCoinDetails && coinId) {
-      const coinDetails = await this.getCoinById(coinId)
-      const usdCoin = this.mapCoinDetailsToCoin(coinDetails, 'usd')
-      const eurCoin = this.mapCoinDetailsToCoin(coinDetails, 'eur')
-      const ilsCoin = this.mapCoinDetailsToCoin(coinDetails, 'ils')
-
-      return {
-        usd: [usdCoin],
-        eur: [eurCoin],
-        ils: [ilsCoin],
-      }
+      return this.getMultiCurrencyCoinDetails(coinId)
     }
 
     const marketsUrl = this.getMarketsUrl()

@@ -72,8 +72,6 @@ Rules:
 
 function extract(content: string): AiResult {
     try {
-        console.log("RAW AI:", content);
-
         const cleaned = content
             .replace(/```json|```/gi, "")
             .trim();
@@ -149,10 +147,6 @@ function extract(content: string): AiResult {
 
         const shouldBuyByRule = recommendation === "BUY";
 
-        if (typeof data.should_buy === "boolean" && data.should_buy !== shouldBuyByRule) {
-            console.warn("AI returned inconsistent should_buy. Normalizing by recommendation.");
-        }
-
         return {
             recommendation: recommendation as "BUY" | "HOLD" | "SELL",
             should_buy: shouldBuyByRule,
@@ -160,8 +154,6 @@ function extract(content: string): AiResult {
         };
 
     } catch {
-        console.error("PARSE FAILED:", content);
-
         return {
             recommendation: "HOLD",
             should_buy: false,
@@ -175,7 +167,7 @@ async function callAI(messages: ChatMessage[], apiKey: string): Promise<AiResult
         return { recommendation: "HOLD", should_buy: false, explanation: "Missing API key" };
     }
 
-    const { data } = await axios.post("http://localhost:3001/api/ai", {
+    const { data } = await axios.post("/api/ai", {
         messages,
         apiKey,
     });
@@ -183,7 +175,6 @@ async function callAI(messages: ChatMessage[], apiKey: string): Promise<AiResult
     const content = data?.content;
 
     if (typeof content !== "string") {
-        console.error("BAD RESPONSE:", data);
         return {
             recommendation: "HOLD",
             should_buy: false,

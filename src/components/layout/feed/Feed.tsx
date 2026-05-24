@@ -18,7 +18,7 @@ import Spinner from '../../common/spinner/Spinner'
 import './Feed.css'
 
 const TRACKED_COIN_SYMBOLS_KEY = 'trackedCoinSymbols'
-const LIVE_REFRESH_MS = 1_000
+const LIVE_REFRESH_MS = 15_000
 const HISTORY_DAYS = 30
 const HOURS_LIMIT = HISTORY_DAYS * 24
 const MAX_POINTS = HOURS_LIMIT

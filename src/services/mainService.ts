@@ -29,7 +29,7 @@ const RETRY_COUNT = 2
 const RETRY_DELAY_MS = 1_500
 
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: 'https://api.coingecko.com/api/v3',
   timeout: 12_000,
 })
 
