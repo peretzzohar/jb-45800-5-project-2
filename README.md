@@ -1,39 +1,73 @@
-# Project 2 - Crypto Dashboard
+# React + TypeScript + Vite
 
-## Author
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-Zohar Peretz
+Currently, two official plugins are available:
 
-## Project Summary
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
 
-This project is a React + TypeScript application for tracking cryptocurrency markets in real time.
+## React Compiler
 
-Main features:
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-- Home page with a top-100 coins list and search by name/symbol.
-- Track up to 5 selected coins and store them in localStorage.
-- Live feed page with interactive charts, trend indicators, and 24h change.
-- AI recommendation page that analyzes a tracked coin and returns BUY, HOLD, or SELL guidance.
-- AI headline/model link: [NVIDIA Llama 3.1 8B Instruct](https://build.nvidia.com/meta/llama-3_1-8b-instruct)
-- Multi-page navigation with React Router and a responsive layout.
+## Expanding the ESLint configuration
 
-The app uses Vite for fast development, and includes a backend folder for server-side integrations.
+If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
 
-## Tech Stack
+```js
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
 
-- React 19
-- TypeScript
-- Vite
-- Redux Toolkit
-- React Router
-- Axios
-- Lightweight Charts / Chart.js
-- Express (backend)
+      // Remove tseslint.configs.recommended and replace with this
+      tseslint.configs.recommendedTypeChecked,
+      // Alternatively, use this for stricter rules
+      tseslint.configs.strictTypeChecked,
+      // Optionally, add this for stylistic rules
+      tseslint.configs.stylisticTypeChecked,
 
-## Run Locally
-...
+      // Other configs...
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
+```
 
-```bash
-npm install
-npm run dev
+You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+
+```js
+// eslint.config.js
+import reactX from 'eslint-plugin-react-x'
+import reactDom from 'eslint-plugin-react-dom'
+
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
+      // Enable lint rules for React
+      reactX.configs['recommended-typescript'],
+      // Enable lint rules for React DOM
+      reactDom.configs.recommended,
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
 ```
