@@ -1,73 +1,115 @@
-# React + TypeScript + Vite
+# Crypto Tracker + AI Recommendation
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A React + TypeScript + Vite app for tracking cryptocurrencies and getting AI BUY/HOLD/SELL recommendations.
 
-Currently, two official plugins are available:
+## Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- React 19
+- TypeScript
+- Redux Toolkit
+- Vite
+- CoinGecko APIs (market data)
+- NVIDIA Inference API (AI recommendation)
 
-## React Compiler
+## Run Locally (Teacher Friendly)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 1) Requirements
 
-## Expanding the ESLint configuration
+- Node.js 20+ (recommended)
+- npm
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### 2) Install
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### 3) Environment setup
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Copy `.env.example` to `.env.development` and keep default values unless needed.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Windows (PowerShell):
+
+```powershell
+Copy-Item .env.example .env.development
 ```
+
+macOS/Linux/Git Bash:
+
+```bash
+cp .env.example .env.development
+```
+
+Optional: set `VITE_NVIDIA_KEY` in `.env.development`.
+- If set, AI recommendations work immediately.
+- If not set, user can paste API key in the Recommendation page UI.
+
+For production deployment (recommended), set a server-side environment variable:
+
+- `NVIDIA_API_KEY=your_real_key`
+
+This key should be configured in your hosting provider (for example Vercel project settings), not committed to the repo.
+
+### 4) Start dev server
+
+```bash
+npm run dev
+```
+
+Open: `http://localhost:5173`
+
+## Available Scripts
+
+- `npm run dev` - start local dev server
+- `npm run build` - type-check and build production assets
+- `npm run test` - run unit tests
+- `npm run preview` - preview production build locally
+- `npm run lint` - run ESLint
+
+## How AI Recommendation Works
+
+- Frontend calls `/api/recommendation`
+- Serverless API route in `api/recommendation.js` calls NVIDIA securely using `NVIDIA_API_KEY`
+- In local Vite development, the app falls back to direct `/api/nvidia/v1/chat/completions` if the serverless route is not running
+- Vite proxy forwards `/api/nvidia/*` to `https://integrate.api.nvidia.com`
+
+## Quick Demo Flow (For Grading)
+
+1. Open Home page and track one or more coins.
+2. Open Recommendation page.
+3. Provide NVIDIA API key in input (unless `VITE_NVIDIA_KEY` is set).
+4. Click "Get AI Recommendations".
+5. App shows BUY/HOLD/SELL plus short explanation for the selected tracked coin.
+
+## Grading Checklist
+
+- App starts with `npm run dev` without backend setup.
+- Coin list loads from CoinGecko.
+- User can track at least one coin from Home.
+- Recommendation page accepts API key and returns BUY/HOLD/SELL result.
+- `npm run build` completes successfully.
+- `npm run test` has passing tests.
+
+## Deployment
+
+Deployment URL: add your live URL here before submission.
+
+Suggested platforms:
+
+- Vercel
+- Netlify
+
+After deployment, confirm that the Recommendation page works by entering a valid NVIDIA API key in the UI.
+
+### Vercel deployment checklist
+
+1. Import this repo into Vercel.
+2. Set environment variable `NVIDIA_API_KEY` in project settings.
+3. Deploy.
+4. Verify `POST /api/recommendation` returns content and Recommendation page works without exposing secret keys.
+
+## Project Notes
+
+- This project intentionally runs frontend-only.
+- The `backend/` folder was removed.
+- `dist/` is generated output from `npm run build`.

@@ -22,9 +22,27 @@ type ChatMessage = {
 };
 
 const API_KEY_STORAGE = "aiApiKey";
+const MODEL = "meta/llama-3.1-8b-instruct";
 
 function getApiKey(): string {
     return localStorage.getItem(API_KEY_STORAGE) || "";
+}
+
+function buildNvidiaPayload(messages: ChatMessage[]) {
+    return {
+        model: MODEL,
+        messages: [
+            {
+                role: "system" as const,
+                content: "You are a data analysis assistant. Respond ONLY with valid JSON. No extra text.",
+            },
+            ...messages,
+        ],
+        temperature: 0.2,
+        top_p: 0.7,
+        max_tokens: 1024,
+        stream: false,
+    };
 }
 
 function buildMessages(metrics: AiMetrics): ChatMessage[] {
@@ -163,16 +181,44 @@ function extract(content: string): AiResult {
 }
 
 async function callAI(messages: ChatMessage[], apiKey: string): Promise<AiResult> {
-    if (!apiKey) {
+    const payload = buildNvidiaPayload(messages);
+    const trimmedApiKey = apiKey.trim();
+
+    try {
+        const { data } = await axios.post("/api/recommendation", {
+            messages,
+        });
+
+        const content = data?.content;
+
+        if (typeof content !== "string") {
+            return {
+                recommendation: "HOLD",
+                should_buy: false,
+                explanation: "No AI content returned",
+            };
+        }
+
+        return extract(content);
+    } catch {
+        // Local Vite dev does not run serverless functions, so fall back to direct proxy.
+    }
+
+    if (!trimmedApiKey) {
         return { recommendation: "HOLD", should_buy: false, explanation: "Missing API key" };
     }
 
-    const { data } = await axios.post("/api/ai", {
-        messages,
-        apiKey,
-    });
+    const { data } = await axios.post(
+        "/api/nvidia/v1/chat/completions",
+        payload,
+        {
+            headers: {
+                Authorization: `Bearer ${trimmedApiKey}`,
+            },
+        }
+    );
 
-    const content = data?.content;
+    const content = data?.choices?.[0]?.message?.content;
 
     if (typeof content !== "string") {
         return {
